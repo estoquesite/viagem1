@@ -8313,5 +8313,528 @@ details.v289-detalhes[open] summary, details.v289-detalhes-rotr[open] summary {
 })();
 </script>
 <!--/V290-->
+<!--V291-->
+<style>
+/* 1. Editar some */
+#tab-btn-itinerario,#tab-itinerario{display:none!important}
+#v273-tabs{grid-template-columns:repeat(5,1fr)!important}
+.v288-rot-x{display:none!important}
+/* lápis antigos (levavam ao Editar) saem; entra o lápis novo */
+.v277-pt .v287-ac .v287-b.ed,.v279-cd .v287-b.ed{display:none!important}
+.v291-ac{display:inline-flex;flex:none}
+.v291-meta{display:inline-flex;gap:6px;align-items:center;flex:none;font-size:12px;font-weight:800;color:#3730a3}
+.v291-meta a{text-decoration:none;font-size:15px}
+/* 2. edição no card */
+.v291-ed{margin:8px 0 0 30px;padding:10px;border-radius:12px;background:rgba(255,255,255,.92);border:1px solid #c7d2fe;display:flex;flex-direction:column;gap:6px;color:#0f172a}
+.v291-ed label{font-size:11px;font-weight:800;color:#475569}
+.v291-ed input,.v291-ed select,.v291-ed textarea{width:100%;padding:9px;border:1px solid #cbd5e1;border-radius:10px;font-size:16px;background:#fff;color:#0f172a;font-family:inherit}
+.v291-ed textarea{min-height:60px;resize:vertical}
+.v291-ed .r2{display:flex;gap:8px}.v291-ed .r2>div{flex:1;min-width:0}
+.v291-ed .bt{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}
+.v291-ed .bt button{padding:9px 12px;border-radius:10px;border:1px solid #c7d2fe;background:#eef2ff;color:#3730a3;font-weight:800;font-size:13px}
+.v291-ed .bt .k{background:linear-gradient(135deg,var(--va1,#6366f1),var(--va2,#7c3aed));color:#fff;border:0;flex:1}
+.v291-ed .bt .x{background:#fee2e2;border-color:#fecaca;color:#b91c1c}
+/* 3. adicionar depois do ponto */
+.v291-add{margin:5px 0 0 30px}
+.v291-add .t{border:1px dashed #94a3b8;background:rgba(255,255,255,.75);color:#475569;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:800}
+.v291-add .o{display:none;gap:6px;flex-wrap:wrap;margin-top:6px}
+.v291-add.on .o{display:flex}
+.v291-add .o button{padding:7px 11px;border-radius:10px;border:1px solid #c7d2fe;background:#eef2ff;color:#3730a3;font-weight:800;font-size:12px}
+/* diálogo próprio */
+#v291-d{position:fixed;inset:0;z-index:900;background:rgba(15,23,42,.75);display:flex;align-items:center;justify-content:center;padding:16px}
+#v291-d .b{background:#fff;color:#0f172a;border-radius:20px;padding:16px;width:100%;max-width:340px;font-size:14px}
+#v291-d h3{margin:0 0 6px;font-size:17px}#v291-d p{margin:4px 0 8px;color:#475569}
+#v291-d input{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:10px;font-size:16px;color:#0f172a;background:#fff}
+#v291-d .bt{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+#v291-d .bt button{padding:9px 14px;border:0;border-radius:10px;font-weight:700;background:#e2e8f0;color:#0f172a}
+#v291-d .bt .k{background:#6366f1;color:#fff}
+</style>
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i)};
+  function T(m,t){if(window.mostrarToast)window.mostrarToast(m,t||'info')}
+  function esc(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+  function undo(){try{registarEstadoAnterior()}catch(e){}}
+  function save(){try{salvarStorage()}catch(e){}}
+  function redraw(){try{atualizarTudo()}catch(e){}}
+  function reg(a,v){if(a&&v&&a.indexOf(v)<0)a.push(v)}
+  function lnk(u){u=String(u||'').trim();return /^https?:\/\//i.test(u)?u:'https://'+u}
+  function item(id){return (dadosApp.itinerario||[]).filter(function(i){return String(i.id)===String(id)})[0]}
+  function trecho(it,id){return it&&(it.trechos||[]).filter(function(t){return String(t.id)===String(id)})[0]}
+  function parada(it,id){return it&&(it.paradas||[]).filter(function(p){return String(p.id)===String(id)})[0]}
+  function lista(it,tr){return (it.paradas||[]).filter(function(p){return String(p.apos)===String(tr.id)})}
+  function idDe(c){var m=c.innerHTML.match(/(?:alternarBloqueio|removerDoRoteiro|apagarBloco)\('([^']+)'\)/);return m?m[1]:null}
+  function perc(it,tr){return window.v277Percurso(it,tr)}
+  function chave(tr,k,p){return k==='p'?'p|'+p.id:tr.id+'|'+k}
+  function posicao(it,tr,k,p){if(k==='o')return 0;if(k==='d')return lista(it,tr).length+1;return lista(it,tr).indexOf(p)+1}
+  function rotasDe(card){return [].filter.call(card.querySelectorAll('div.my-2'),function(d){return /📍 Rota/.test(d.textContent)})}
+  var TR=['Trem','Ônibus','Metrô','A pé','Carro','Avião','Outro'];
+  function modoMaps(t){return t==='Carro'?'driving':t==='A pé'?'walking':'transit'}
+  function transpDa(P,leg){var l=P.legs[leg];return l&&l[0]?l[0].c.transporte:''}
+  function congela(it,tr){perc(it,tr).legs.forEach(function(l,k){l.forEach(function(x){x.c.perna=k+1})})}
+  function novaCond(tr,tp,perna){if(!tr.conducoes)tr.conducoes=[];
+    tr.conducoes.push({id:'c'+Date.now()+Math.floor(Math.random()*999),transporte:tp,valor:0,moeda:'EUR',notas:'',fotosExtras:[],perna:perna})}
+
+  /* ---------- 1. Editar some; todos os blocos entram no Roteiro ---------- */
+  var om=window.mudarTab;
+  if(typeof om==='function')window.mudarTab=function(t){
+    if(t==='itinerario'){var p=localStorage.getItem('tab_ativa_v269');t=p==='leitura'?'utilidades':'leitura'}
+    return om.call(this,t)};
+  function aprova(){var ch=false;(dadosApp.itinerario||[]).forEach(function(b){if(!b.bloqueado){b.bloqueado=true;ch=true}});if(ch)save()}
+  var orr=window.renderizarModoLeitura;
+  if(typeof orr==='function')window.renderizarModoLeitura=function(){try{aprova()}catch(e){}return orr.apply(this,arguments)};
+
+  /* ---------- diálogo próprio (celulares bloqueiam prompt/confirm) ---------- */
+  function dlg(tit,msg,campo,ok){
+    var m=document.createElement('div');m.id='v291-d';
+    m.innerHTML='<div class="b"><h3>'+esc(tit)+'</h3>'+(msg?'<p>'+esc(msg)+'</p>':'')+(campo?'<input type="text" placeholder="'+esc(campo)+'">':'')+'<div class="bt"><button type="button" class="c">Cancelar</button><button type="button" class="k">OK</button></div></div>';
+    document.body.appendChild(m);var i=m.querySelector('input');
+    function go(){var v=i?i.value.trim():'';if(campo&&!v)return;m.remove();ok(v)}
+    if(i){setTimeout(function(){i.focus()},60);i.addEventListener('keydown',function(e){if(e.key==='Enter')go()})}
+    m.addEventListener('click',function(e){if(e.target===m||e.target.closest('.c')){m.remove();return}if(e.target.closest('.k'))go()});
+  }
+
+  /* ---------- operações ---------- */
+  function salvar(el,ed){
+    var it=item(el.dataset.v291it),tr=trecho(it,el.dataset.v291tr);if(!it||!tr)return;
+    var k=el.dataset.v291k,p=k==='p'?parada(it,el.dataset.v291p):null;
+    var f=function(n){return ed.querySelector('[data-f="'+n+'"]').value.trim()};
+    var nome=f('nome');if(k==='p'&&!nome){T('Dê um nome para a parada.','erro');return}
+    undo();var j=posicao(it,tr,k,p);
+    if(k==='o'){tr.origem=nome;reg(dadosApp.origensCadastrados,nome)}
+    else if(k==='d'){tr.destino=nome;reg(dadosApp.destinosCadastradosLocais,nome)}
+    else if(p)p.local=nome;
+    var obs=ed.querySelector('[data-f="obs"]').value;
+    if(k==='o')tr.textoSaida=obs;else if(k==='d')tr.textoChegada=obs;else if(p)p.texto=obs;
+    if(!it.pontoExtra)it.pontoExtra={};
+    it.pontoExtra[chave(tr,k,p)]={horario:f('horario'),link:f('link')};
+    if(k!=='d'){var tp=ed.querySelector('[data-f="tp"]').value;
+      if(tp){var l=perc(it,tr).legs[j];if(l&&l[0])l[0].c.transporte=tp;else novaCond(tr,tp,j+1)}}
+    save();redraw();T('Ponto salvo ✓','sucesso');
+  }
+  function addTransp(itId,trId,j,tp){
+    var it=item(itId),tr=trecho(it,trId);if(!it||!tr)return;undo();
+    novaCond(tr,tp,j+1);save();redraw();T(tp+' adicionado depois deste ponto ✓','sucesso');
+  }
+  function inserirParada(itId,trId,j,nome){
+    var it=item(itId),tr=trecho(it,trId);if(!it||!tr)return;undo();
+    congela(it,tr);
+    (tr.conducoes||[]).forEach(function(c){if(c.perna>j+1)c.perna++});
+    if(!it.paradas)it.paradas=[];
+    var ps=lista(it,tr),np={id:'p'+Date.now()+Math.floor(Math.random()*999),apos:tr.id,local:nome,de:'',texto:''};
+    var at=j===0?(ps[0]?it.paradas.indexOf(ps[0]):it.paradas.length):it.paradas.indexOf(ps[j-1])+1;
+    it.paradas.splice(at,0,np);reg(dadosApp.destinosCadastradosLocais,nome);
+    save();redraw();T('Parada “'+nome+'” adicionada ✓','sucesso');
+  }
+  function moverParada(itId,trId,pId,d){
+    var it=item(itId),tr=trecho(it,trId),p=parada(it,pId);if(!it||!tr||!p)return;
+    var ps=lista(it,tr),i=ps.indexOf(p),n=i+d;
+    if(n<0||n>=ps.length){T(d<0?'Já é a primeira parada.':'Já é a última parada.');return}
+    undo();var a=it.paradas.indexOf(ps[i]),b=it.paradas.indexOf(ps[n]),t=it.paradas[a];it.paradas[a]=it.paradas[b];it.paradas[b]=t;
+    save();redraw();
+  }
+  function apagarParada(itId,trId,pId){
+    var it=item(itId),tr=trecho(it,trId),p=parada(it,pId);if(!it||!tr||!p)return;
+    dlg('Apagar a parada “'+(p.local||'sem nome')+'”?','Você pode usar ↩️ Desfazer depois.',null,function(){
+      undo();congela(it,tr);var j=lista(it,tr).indexOf(p)+1;
+      (tr.conducoes||[]).forEach(function(c){if(c.perna-1>=j)c.perna--});
+      it.paradas=it.paradas.filter(function(q){return q!==p});
+      if(it.pontosFeitos)delete it.pontosFeitos[tr.id+'|'+pId];
+      if(it.pontoExtra)delete it.pontoExtra['p|'+pId];
+      save();redraw();T('Parada apagada.','info');
+    });
+  }
+
+  /* ---------- 2/3/6. botões e painel em cada ponto do Roteiro ---------- */
+  function extra(el){var it=item(el.dataset.v291it),tr=trecho(it,el.dataset.v291tr);if(!it||!tr)return null;
+    var k=el.dataset.v291k,p=k==='p'?parada(it,el.dataset.v291p):null;if(k==='p'&&!p)return null;
+    return (it.pontoExtra||{})[chave(tr,k,p)]||null}
+  function meta(el){
+    var hd=el.querySelector('.hd');if(!hd)return;
+    var old=hd.querySelector('.v291-meta');if(old)old.remove();
+    var x=extra(el);if(!x||(!x.horario&&!x.link))return;
+    var s=document.createElement('span');s.className='v291-meta';
+    s.innerHTML=(x.horario?'<span>🕒 '+esc(x.horario)+'</span>':'')+(x.link?'<a href="'+esc(lnk(x.link))+'" target="_blank" rel="noopener" aria-label="Abrir link">🔗</a>':'');
+    s.addEventListener('click',function(e){e.stopPropagation()});
+    var b=hd.querySelector('b');hd.insertBefore(s,b?b.nextSibling:null);
+  }
+  function toggleEd(el){
+    var old=el.querySelector(':scope > .v291-ed');if(old){old.remove();return}
+    var it=item(el.dataset.v291it),tr=trecho(it,el.dataset.v291tr);if(!it||!tr)return;
+    var k=el.dataset.v291k,p=k==='p'?parada(it,el.dataset.v291p):null;
+    var P=perc(it,tr),j=posicao(it,tr,k,p),pt=P.pts[j]||{};
+    var x=(it.pontoExtra||{})[chave(tr,k,p)]||{};
+    var obs=k==='o'?tr.textoSaida:k==='d'?tr.textoChegada:(p&&p.texto);
+    var tp=k!=='d'?transpDa(P,j):'';
+    var opts=(tp&&TR.indexOf(tp)<0?[tp]:[]).concat(TR);
+    var ed=document.createElement('div');ed.className='v291-ed';
+    ed.innerHTML='<div><label>Nome do ponto</label><input data-f="nome"></div>'+
+      '<div class="r2"><div><label>🕒 Horário</label><input data-f="horario" placeholder="ex.: 09:30"></div><div><label>🔗 Link</label><input data-f="link" type="url" placeholder="https://..."></div></div>'+
+      '<div><label>📝 Observação</label><textarea data-f="obs"></textarea></div>'+
+      (k!=='d'?'<div><label>🚌 Transporte até o próximo ponto</label><select data-f="tp"><option value="">— sem alterar —</option>'+opts.map(function(o){return '<option value="'+esc(o)+'">'+esc(o)+'</option>'}).join('')+'</select></div>':'')+
+      '<div class="bt"><button type="button" class="k" data-a="s">✓ Salvar</button><button type="button" data-a="c">Cancelar</button>'+
+      (k==='p'?'<button type="button" data-a="u" aria-label="Subir parada">⬆</button><button type="button" data-a="d" aria-label="Descer parada">⬇</button><button type="button" class="x" data-a="x" aria-label="Apagar parada">🗑</button>':'')+'</div>';
+    ed.querySelector('[data-f="nome"]').value=pt.nome||'';
+    ed.querySelector('[data-f="horario"]').value=x.horario||'';
+    ed.querySelector('[data-f="link"]').value=x.link||'';
+    ed.querySelector('[data-f="obs"]').value=obs||'';
+    var sel=ed.querySelector('[data-f="tp"]');if(sel)sel.value=tp||'';
+    ed.addEventListener('click',function(e){
+      e.stopPropagation();var b=e.target.closest('button');if(!b)return;var a=b.dataset.a;
+      if(a==='c')ed.remove();
+      else if(a==='s')salvar(el,ed);
+      else if(a==='u')moverParada(it.id,tr.id,p.id,-1);
+      else if(a==='d')moverParada(it.id,tr.id,p.id,1);
+      else if(a==='x')apagarParada(it.id,tr.id,p.id);
+    });
+    el.querySelector('.hd').insertAdjacentElement('afterend',ed);
+  }
+  function addRow(el){
+    var r=document.createElement('div');r.className='v291-add';
+    r.innerHTML='<button type="button" class="t">＋ adicionar depois deste ponto</button><div class="o"><button type="button" data-a="Ônibus">🚌 Ônibus</button><button type="button" data-a="Trem">🚆 Trem</button><button type="button" data-a="A pé">🚶 A pé</button><button type="button" data-a="__p">🛑 Parada</button></div>';
+    r.addEventListener('click',function(e){
+      e.stopPropagation();var b=e.target.closest('button');if(!b)return;
+      if(b.classList.contains('t')){r.classList.toggle('on');return}
+      var it=item(el.dataset.v291it),tr=trecho(it,el.dataset.v291tr);if(!it||!tr)return;
+      var k=el.dataset.v291k,p=k==='p'?parada(it,el.dataset.v291p):null,j=posicao(it,tr,k,p),a=b.dataset.a;
+      r.classList.remove('on');
+      if(a==='__p')dlg('Nova parada','Depois de “'+((P0(it,tr,j))||'este ponto')+'”.','Nome do lugar',function(nome){inserirParada(it.id,tr.id,j,nome)});
+      else addTransp(it.id,tr.id,j,a);
+    });
+    return r;
+  }
+  function P0(it,tr,j){var pt=perc(it,tr).pts[j];return pt&&pt.nome}
+  function decora(el){
+    if(el.dataset.v291d)return;var hd=el.querySelector('.hd');if(!hd)return;el.dataset.v291d=1;
+    var w=document.createElement('span');w.className='v291-ac';
+    var b=document.createElement('button');b.type='button';b.className='v287-b ed';b.textContent='✏️';b.title='Editar este ponto';b.setAttribute('aria-label','Editar este ponto');
+    b.addEventListener('click',function(e){e.stopPropagation();toggleEd(el)});
+    w.appendChild(b);
+    hd.insertBefore(w,hd.querySelector('.v287-ac')||hd.querySelector('.v279-ic')||hd.querySelector('.v279-cv')||null);
+    meta(el);
+    if(el.dataset.v291k!=='d')hd.insertAdjacentElement('afterend',addRow(el));
+  }
+  function marca(){
+    var box=$('lista-leitura-html');if(!box||!window.v277Percurso)return;
+    [].forEach.call(box.children,function(card){
+      var id=idDe(card),it=id&&item(id);if(!it)return;
+      rotasDe(card).forEach(function(rt,k){
+        var tr=(it.trechos||[])[k],tl=rt.querySelector('.v277-tl');if(!tr||!tl)return;
+        var P=perc(it,tr),usados={},els=[].slice.call(tl.querySelectorAll('.v277-pt'));
+        els.forEach(function(el){if(el.dataset.v291j!==undefined)usados[el.dataset.v291j]=1});
+        els.forEach(function(el){
+          if(el.dataset.v291j===undefined){
+            var j=-1,q;
+            if(el.classList.contains('o'))j=0;
+            else if(el.classList.contains('d'))j=P.pts.length-1;
+            else{
+              var t=((el.querySelector('.hd b')||{}).textContent||'').replace(/^.*Parada:\s*/,'').trim();
+              for(q=1;q<P.pts.length-1;q++)if(!usados[q]&&(P.pts[q].nome||'—')===t){j=q;break}
+              if(j<0)for(q=1;q<P.pts.length-1;q++)if(!usados[q]){j=q;break}
+            }
+            if(j<0||!P.pts[j])return;
+            usados[j]=1;var pt=P.pts[j];
+            el.dataset.v291j=j;el.dataset.v291k=pt.k;el.dataset.v291tr=tr.id;el.dataset.v291it=it.id;
+            if(pt.k==='p'&&pt.p)el.dataset.v291p=pt.p.id;
+          }
+          decora(el);
+        });
+      });
+    });
+  }
+
+  /* ---------- 5. mapa de acordo com o transporte ---------- */
+  function fix(a,m){var h=a.getAttribute('href')||'';var n=h.replace(/travelmode=[a-z]+/,'travelmode='+m);if(n!==h)a.setAttribute('href',n)}
+  function mapas(){
+    var box=$('lista-leitura-html');if(!box||!window.v277Percurso)return;
+    [].forEach.call(box.children,function(card){
+      var id=idDe(card),it=id&&item(id);if(!it)return;
+      rotasDe(card).forEach(function(rt,k){
+        var tr=(it.trechos||[])[k];if(!tr)return;var P=perc(it,tr);
+        var hm=rt.querySelector('a.v285-hm');
+        if(hm){var ms=(tr.conducoes||[]).map(function(c){return modoMaps(c.transporte)});
+          fix(hm,ms.length&&ms.every(function(x){return x===ms[0]})?ms[0]:'transit')}
+        [].forEach.call(rt.querySelectorAll('.v277-pt'),function(el){
+          if(el.dataset.v291j===undefined)return;var j=+el.dataset.v291j;
+          var m=modoMaps(transpDa(P,j===0?0:j-1));
+          [].forEach.call(el.querySelectorAll('a[href*="maps/dir"]'),function(a){if((a.getAttribute('href')||'').indexOf('origin=')<0)return;fix(a,m)});
+        });
+      });
+    });
+  }
+
+  /* ---------- 6. ↩️ Desfazer na barra do Roteiro ---------- */
+  function undoBtn(){
+    var bar=$('v283-rb');if(!bar||bar.querySelector('[data-u]'))return;
+    var b=document.createElement('button');b.type='button';b.dataset.u='1';b.textContent='↩️ Desfazer';
+    b.addEventListener('click',function(e){e.stopPropagation();if(typeof desfazerUltimaAcao==='function')desfazerUltimaAcao()});
+    bar.appendChild(b);
+  }
+
+  function roda(){try{marca();mapas();undoBtn()}catch(e){console.error('v291',e)}}
+  var t1=null,t2=null,box=$('lista-leitura-html');
+  if(box){
+    new MutationObserver(function(){clearTimeout(t1);t1=setTimeout(roda,450)}).observe(box,{childList:true,subtree:true});
+    new MutationObserver(function(){clearTimeout(t2);t2=setTimeout(function(){try{mapas()}catch(e){}},150)}).observe(box,{attributes:true,attributeFilter:['href'],subtree:true});
+  }
+  [900,1800,3200].forEach(function(ms){setTimeout(roda,ms)});
+
+  /* ---------- 4. Agenda atualiza o Roteiro sozinha ---------- */
+  var DIA=null;
+  function limpaDia(){
+    var b=(dadosApp.itinerario||[]).filter(function(x){return x.dataInicio===DIA||(x.dataInicio&&x.dataFim&&DIA>=x.dataInicio&&DIA<=x.dataFim)})[0];
+    if(!b||(!(b.trechos||[]).length))return;
+    undo();b.trechos=[];b.paradas=[];save();redraw();
+  }
+  function sync(){
+    var go=window.v289ConfirmarEnviarRoteiro;if(!go||!DIA)return;
+    var cnt=$('v289-contador-etapas'),n=cnt?(parseInt(cnt.textContent,10)||0):0;
+    if(n===0){limpaDia();return}
+    var sv={f:window.v289FecharMontador,m:window.mudarTab,t:window.mostrarToast};
+    window.v289FecharMontador=function(){};window.mudarTab=function(){};window.mostrarToast=function(){};
+    try{go()}catch(e){console.error('v291 sync',e)}
+    finally{window.v289FecharMontador=sv.f;window.mudarTab=sv.m;window.mostrarToast=sv.t}
+    T('Roteiro atualizado ✓','sucesso');
+  }
+  function agenda(){
+    var oa=window.v289AbrirMontagemDia;
+    if(oa&&!oa._v291){var wa=function(d){DIA=d;return oa.apply(this,arguments)};wa._v291=1;window.v289AbrirMontagemDia=wa}
+    ['v289SalvarEtapaNoPercurso','v289MoverEtapa','v289ExcluirEtapa'].forEach(function(nm){
+      var o=window[nm];if(typeof o!=='function'||o._v291)return;
+      var w=function(){var r=o.apply(this,arguments);sync();return r};w._v291=1;window[nm]=w;
+    });
+    var c=$('v289-inp-cidade');if(c&&!c.dataset.v291){c.dataset.v291=1;c.addEventListener('change',sync)}
+    var b=document.querySelector('#v289-modal-montador button[onclick*="v289ConfirmarEnviarRoteiro"]');
+    if(b&&!b.dataset.v291){
+      var d=document.createElement('div');d.dataset.v291=1;
+      d.style.cssText='flex:1;text-align:center;font-size:12px;font-weight:800;color:#047857;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:12px;padding:10px';
+      d.textContent='✓ O Roteiro é atualizado a cada etapa';b.replaceWith(d);
+    }
+  }
+  agenda();[300,1200,2500].forEach(function(ms){setTimeout(agenda,ms)});
+})();
+</script>
+<!--/V291-->
+<!--V292-->
+<style>
+#v292-p{background:#fff;border-radius:22px;padding:10px;box-shadow:0 4px 16px rgba(99,102,241,.12);display:flex;flex-direction:column;gap:8px;color:#0f172a}
+#v292-p [hidden]{display:none!important}
+.v292-st{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.v292-st::-webkit-scrollbar{display:none}
+.v292-c{flex:none;border:1.5px solid #c7d2fe;border-left-width:5px;background:#eef2ff;color:#1e1b4b;border-radius:12px;padding:5px 10px;font-size:13px;font-weight:800;line-height:1.2;text-align:center;white-space:nowrap}
+.v292-c small{display:block;font-size:10px;font-weight:700;color:#475569}
+.v292-c.on{outline:3px solid #6366f1;outline-offset:1px}
+#v292-box{display:flex;flex-direction:column;gap:8px;padding-top:8px;border-top:1px dashed #c7d2fe}
+.v292-h{display:flex;gap:8px;align-items:center}
+.v292-h b{flex:1;min-width:0;font-size:14px}
+.v292-h input{width:48%;padding:8px;border:1px solid #cbd5e1;border-radius:10px;font-size:16px;background:#f8fafc;color:#0f172a}
+.v292-r{display:flex;gap:6px}
+.v292-r input{flex:1;min-width:0;padding:11px;border:2px solid #6366f1;border-radius:12px;font-size:16px;background:#fff;color:#0f172a}
+.v292-r button{flex:none;padding:0 14px;border:0;border-radius:12px;color:#fff;font-weight:800;font-size:14px;background:linear-gradient(135deg,var(--va1,#6366f1),var(--va2,#7c3aed))}
+.v292-ms{font-size:13px;font-weight:700;color:#047857;word-break:break-word}
+.v292-ms.e{color:#b91c1c}
+.v292-hn{font-size:12px;color:#64748b}
+.v292-lnk{align-self:flex-start;border:1px dashed #94a3b8;background:#f8fafc;color:#475569;border-radius:999px;padding:5px 12px;font-size:12px;font-weight:800}
+</style>
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i)};
+  var DIA=null;
+  function T(m,t){if(window.mostrarToast)window.mostrarToast(m,t||'info')}
+  function esc(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+  function undo(){try{registarEstadoAnterior()}catch(e){}}
+  function save(){try{salvarStorage()}catch(e){}}
+  function reg(a,v){if(a&&v&&a.indexOf(v)<0)a.push(v)}
+  function item(id){return (dadosApp.itinerario||[]).filter(function(i){return String(i.id)===String(id)})[0]}
+  function idDe(c){var m=c.innerHTML.match(/(?:alternarBloqueio|removerDoRoteiro|apagarBloco)\('([^']+)'\)/);return m?m[1]:null}
+  function corDe(b){return b.cor||(typeof obterCorPorCategoria==='function'?obterCorPorCategoria(b.categoria):'#6366f1')}
+  function cobre(b,d){return !!b.dataInicio&&b.dataInicio<=d&&d<=(b.dataFim||b.dataInicio)}
+  function iso(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
+  var SEM=['dom','seg','ter','qua','qui','sex','sáb'];
+
+  /* ---------- ler o link / texto ---------- */
+  function nome(s){
+    s=String(s==null?'':s);try{s=decodeURIComponent(s.replace(/\+/g,' '))}catch(e){s=s.replace(/\+/g,' ')}
+    s=s.trim();if(!s)return '';
+    if(/^-?\d+(\.\d+)?,\s*-?\d+(\.\d+)?$/.test(s))return s;
+    return s.split(',').slice(0,2).join(',').trim().slice(0,60);
+  }
+  function modoDe(raw,u){
+    var m=raw.match(/!3e(\d)/),tm=u&&(u.searchParams.get('travelmode')||'').toLowerCase(),fl=u&&u.searchParams.get('dirflg');
+    if(m){return {0:'Carro',1:'Outro',2:'A pé',3:'Trem'}[m[1]]||'Trem'}
+    if(tm)return tm==='driving'?'Carro':tm==='walking'?'A pé':tm==='bicycling'?'Outro':'Trem';
+    if(fl)return fl==='d'?'Carro':fl==='w'?'A pé':fl==='b'?'Outro':'Trem';
+    return 'Trem';
+  }
+  function parseUrl(raw){
+    var u;try{u=new URL(raw)}catch(e){return null}
+    var pts=[],m=u.pathname.match(/\/maps\/dir\/(.*)$/);
+    if(m){
+      var segs=m[1].split('/');
+      for(var i=0;i<segs.length;i++){if(/^(@|data=)/.test(segs[i]))break;pts.push(nome(segs[i]))}
+      while(pts.length&&!pts[pts.length-1])pts.pop();
+    }
+    if(!pts.length){
+      var q=u.searchParams,o=q.get('origin')||q.get('saddr'),d=q.get('destination'),dd=q.get('daddr'),w=q.get('waypoints');
+      if(dd&&!d){var ps=dd.split(/\s+to:/i);d=ps.pop();w=ps.join('|')}
+      if(d){pts=[nome(o||'')];if(w)w.split('|').forEach(function(x){pts.push(nome(x))});pts.push(nome(d))}
+    }
+    if(!pts.length){var pl=u.pathname.match(/\/maps\/place\/([^\/]+)/);if(pl)pts=[nome(pl[1])]}
+    pts=pts.filter(function(x,i){return x||i===0});
+    return pts.length?{pts:pts,modo:modoDe(raw,u)}:null;
+  }
+  function parseTexto(t){
+    var pts=t.split(/\s*(?:->|→|➔|>|\n)\s*/).map(function(x){return x.replace(/^\d+[\.\)\-]\s*/,'').trim()}).filter(Boolean);
+    return pts.length?{pts:pts,modo:'Trem'}:null;
+  }
+  async function resolve(u){
+    try{
+      var c=new AbortController(),tm=setTimeout(function(){c.abort()},9000);
+      var r=await fetch('https://api.allorigins.win/get?url='+encodeURIComponent(u),{signal:c.signal});clearTimeout(tm);
+      var j=await r.json(),f=j&&j.status&&j.status.url;
+      if(f&&/consent\.google\./.test(f)){try{f=new URL(f).searchParams.get('continue')||f}catch(e){}}
+      return f&&f!==u?f:null;
+    }catch(e){return null}
+  }
+
+  /* ---------- montar a rota do dia ---------- */
+  function aplicar(parsed,cidade){
+    var d=dadosApp;if(!d.itinerario)d.itinerario=[];
+    var b=d.itinerario.filter(function(x){return x.dataInicio===DIA&&(x.dataFim||DIA)===DIA})[0];
+    undo();
+    if(!b){
+      var cob=d.itinerario.filter(function(x){return cobre(x,DIA)})[0];
+      var cid=cidade||(cob&&cob.categoria)||(d.destinosCadastrados||[])[0]||'Viagem';
+      reg(d.destinosCadastrados=d.destinosCadastrados||[],cid);
+      if(!d.coresDestinos)d.coresDestinos={};
+      b={id:Date.now(),categoria:cid,dataInicio:DIA,dataFim:DIA,cor:typeof obterCorPorCategoria==='function'?obterCorPorCategoria(cid):'#6366f1',bloqueado:true,concluido:false,trechos:[],itens:[]};
+      d.itinerario.push(b);
+    }else if(cidade&&cidade!==b.categoria){
+      reg(d.destinosCadastrados=d.destinosCadastrados||[],cidade);
+      b.categoria=cidade;b.cor=typeof obterCorPorCategoria==='function'?obterCorPorCategoria(cidade):b.cor;
+    }
+    b.bloqueado=true;if(!b.trechos)b.trechos=[];
+    var pts=parsed.pts.slice(),ult=b.trechos.length?b.trechos[b.trechos.length-1].destino:'';
+    if(pts.length===1)pts.unshift('');
+    if(!pts[0])pts[0]=ult||'Minha localização';
+    var t=Date.now(),tr={id:t+1,origem:pts[0],destino:pts[pts.length-1],concluido:false,conducoes:[]};
+    if(!b.paradas)b.paradas=[];
+    pts.slice(1,-1).forEach(function(n,i){b.paradas.push({id:'p'+t+'_'+i,apos:tr.id,local:n,de:'',texto:''})});
+    for(var i=0;i<pts.length-1;i++)tr.conducoes.push({id:'c'+t+'_'+i,transporte:parsed.modo,valor:0,moeda:'EUR',notas:'',fotosExtras:[],perna:i+1});
+    b.trechos.push(tr);
+    reg(d.origensCadastrados=d.origensCadastrados||[],tr.origem);
+    reg(d.destinosCadastradosLocais=d.destinosCadastradosLocais||[],tr.destino);
+    save();try{atualizarTudo()}catch(e){}
+    setTimeout(function(){
+      var box=$('lista-leitura-html');if(!box)return;
+      var card=[].filter.call(box.children,function(c){return idDe(c)===String(b.id)})[0];
+      if(card)card.scrollIntoView({behavior:'smooth',block:'start'});
+    },700);
+    return {n:pts.length,txt:pts.join(' → ')};
+  }
+  function status(t,erro){var e=$('v292-ms');if(e){e.textContent=t;e.className='v292-ms'+(erro?' e':'')}}
+  async function montar(raw){
+    raw=(raw||'').trim();
+    if(!raw){T('Cole o link do Maps.','info');return}
+    if(!DIA){T('Escolha um dia primeiro.','info');return}
+    status('⏳ Lendo o link…');
+    var m=raw.match(/https?:\/\/\S+/),url=m?m[0]:null,parsed;
+    if(url&&/(maps\.app\.goo\.gl|goo\.gl\/maps|g\.co\/kgs)/i.test(url)){
+      var f=await resolve(url);
+      if(!f){status('⚠️ Esse é um link curto do app do Maps e não consegui abri-lo. Abra o link no navegador, copie o endereço da barra (começa com google.com/maps/dir…) e cole aqui.',true);return}
+      url=f;
+    }
+    parsed=url?parseUrl(url):parseTexto(raw);
+    if(!parsed){status('⚠️ Não encontrei pontos nesse link. Use o link de rota (“Como chegar”) ou digite: A -> B -> C',true);return}
+    var r=aplicar(parsed,($('v292-cid').value||'').trim());
+    $('v292-lk').value='';
+    status('✓ Rota montada ('+r.n+' pontos): '+r.txt+'. Toque no ✏️ de um ponto para editar; cole outro link para somar mais uma rota.');
+  }
+  function manual(){
+    if(!DIA)return;
+    var d=dadosApp,b=d.itinerario.filter(function(x){return x.dataInicio===DIA&&(x.dataFim||DIA)===DIA})[0];
+    if(!b){status('Cole um link primeiro, ou use “Rota em branco” depois de criar o dia.',true);return}
+    undo();var t=Date.now();
+    b.trechos.push({id:t+1,origem:'',destino:'',concluido:false,conducoes:[{id:'c'+t,transporte:'Trem',valor:0,moeda:'EUR',notas:'',fotosExtras:[],perna:1}]});
+    save();try{atualizarTudo()}catch(e){}status('✓ Rota em branco criada. Use o ✏️ da saída e da chegada para preencher.');
+  }
+
+  /* ---------- painel do dia (no topo do Roteiro) ---------- */
+  function cria(){
+    var tab=$('tab-leitura');if(!tab||$('v292-p'))return;
+    var p=document.createElement('div');p.id='v292-p';
+    p.innerHTML='<div class="v292-st" id="v292-st"></div><div id="v292-box" hidden><div class="v292-h"><b id="v292-dt"></b><input id="v292-cid" list="v292-dl" placeholder="Cidade do dia"><datalist id="v292-dl"></datalist></div><div class="v292-r"><input id="v292-lk" type="text" inputmode="url" placeholder="🗺️ Cole aqui o link do Google Maps" autocomplete="off"><button type="button" id="v292-go">⚡ Montar</button></div><div id="v292-ms" class="v292-ms"></div><div id="v292-hn" class="v292-hn"></div><button type="button" class="v292-lnk" id="v292-mn">＋ Rota em branco (digitar os pontos)</button></div>';
+    tab.insertBefore(p,tab.firstChild);
+    $('v292-st').addEventListener('click',function(e){
+      var b=e.target.closest('button');if(!b)return;
+      if(b.dataset.cal){if(window.v289AbrirCalendario)window.v289AbrirCalendario();return}
+      if(b.dataset.d!==undefined){if(b.dataset.d)abreDia(b.dataset.d);else{DIA=null;status('');pinta();filtro()}}
+    });
+    $('v292-lk').addEventListener('paste',function(){setTimeout(function(){montar($('v292-lk').value)},80)});
+    $('v292-lk').addEventListener('keydown',function(e){if(e.key==='Enter')montar(this.value)});
+    $('v292-go').addEventListener('click',function(){montar($('v292-lk').value)});
+    $('v292-mn').addEventListener('click',manual);
+  }
+  function diasMapa(){
+    var m={};
+    (dadosApp.itinerario||[]).forEach(function(b){
+      if(!b.dataInicio)return;
+      var a=new Date(b.dataInicio+'T00:00:00'),z=new Date((b.dataFim||b.dataInicio)+'T00:00:00');
+      if(isNaN(a)||isNaN(z))return;
+      for(var i=0;a<=z&&i<60;i++){var k=iso(a);(m[k]=m[k]||{c:[],cor:corDe(b)}).c.push(b.categoria||'Dia');a.setDate(a.getDate()+1)}
+    });
+    return m;
+  }
+  function pinta(){
+    try{
+      cria();var st=$('v292-st');if(!st)return;
+      var sl=st.scrollLeft,mp=diasMapa();if(DIA&&!mp[DIA])mp[DIA]={c:[],cor:'#6366f1'};
+      var h='<button type="button" class="v292-c'+(DIA?'':' on')+'" data-d="">📋<small>Todos</small></button><button type="button" class="v292-c" data-cal="1">📅<small>Calendário</small></button>';
+      Object.keys(mp).sort().forEach(function(k){
+        var p=k.split('-'),dt=new Date(+p[0],+p[1]-1,+p[2]),cs=mp[k].c,cid=cs[0]||'—';
+        h+='<button type="button" class="v292-c'+(k===DIA?' on':'')+'" data-d="'+k+'" style="border-color:'+esc(mp[k].cor)+';background:color-mix(in srgb,'+esc(mp[k].cor)+' 22%,white)">'+SEM[dt.getDay()]+' '+p[2]+'/'+p[1]+'<small>'+esc(cid)+(cs.length>1?' +'+(cs.length-1):'')+'</small></button>';
+      });
+      st.innerHTML=h;st.scrollLeft=sl;
+      var box=$('v292-box');box.hidden=!DIA;
+      if(DIA){
+        var q=DIA.split('-'),dd=new Date(+q[0],+q[1]-1,+q[2]);
+        $('v292-dt').textContent='📅 '+SEM[dd.getDay()]+', '+q[2]+'/'+q[1]+'/'+q[0];
+        var n=(dadosApp.itinerario||[]).filter(function(b){return cobre(b,DIA)}).reduce(function(s,b){return s+(b.trechos||[]).length},0);
+        $('v292-hn').textContent=n?n+' rota(s) neste dia, logo abaixo. Cole outro link para somar mais uma.':'Nenhuma rota neste dia ainda. Cole o link do Maps e eu monto tudo.';
+        var dl=$('v292-dl');if(dl)dl.innerHTML=(dadosApp.destinosCadastrados||[]).map(function(x){return '<option value="'+esc(x)+'">'}).join('');
+      }
+    }catch(e){console.error('v292',e)}
+  }
+  function filtro(){
+    var box=$('lista-leitura-html');if(!box)return;
+    [].forEach.call(box.children,function(c){
+      var id=idDe(c),it=id&&item(id);if(!it)return;
+      c.style.display=(!DIA||cobre(it,DIA))?'':'none';
+    });
+  }
+  function abreDia(d){
+    DIA=d;status('');
+    var cob=(dadosApp.itinerario||[]).filter(function(b){return cobre(b,d)})[0],ci=$('v292-cid');
+    var ant=(dadosApp.itinerario||[]).filter(function(b){return b.dataInicio&&b.dataInicio<d}).sort(function(a,b){return a.dataInicio<b.dataInicio?1:-1})[0];
+    var cidade=(cob&&cob.categoria)||(ant&&ant.categoria)||(dadosApp.destinosCadastrados||[])[0]||'';
+    pinta();ci=$('v292-cid');if(ci)ci.value=cidade;
+    if(typeof mudarTab==='function')mudarTab('leitura');
+    filtro();
+    setTimeout(function(){var p=$('v292-p');if(p)p.scrollIntoView({behavior:'smooth',block:'start'});var l=$('v292-lk');if(l)l.focus({preventScroll:true})},250);
+  }
+  /* o calendário passa a abrir o dia direto no Roteiro */
+  var nova=function(d){try{window.v289FecharCalendario()}catch(e){}abreDia(d)};nova._v291=1;
+  window.v289AbrirMontagemDia=nova;
+
+  var lista=$('lista-leitura-html'),t1=null;
+  if(lista)new MutationObserver(function(){clearTimeout(t1);t1=setTimeout(function(){filtro();pinta()},80)}).observe(lista,{childList:true});
+  /* botão de salvar do ponto vira “OK” */
+  if(lista)new MutationObserver(function(){
+    [].forEach.call(lista.querySelectorAll('.v291-ed .bt .k'),function(b){if(b.textContent!=='✓ OK')b.textContent='✓ OK'});
+  }).observe(lista,{childList:true,subtree:true});
+  pinta();[500,1500,3000].forEach(function(ms){setTimeout(function(){pinta();filtro()},ms)});
+})();
+</script>
+<!--/V292-->
 </body>
 </html>
