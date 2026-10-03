@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Roteiro Europa - Mariana (v289.0 Pro)</title>
+    <title>Roteiro Europa - Mariana (v289.1 Pro)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -72,7 +72,7 @@
             <a href="https://translate.google.com/?hl=pt&sl=auto&tl=pt&op=images" target="_blank" class="bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1.5 rounded-lg font-bold text-[10px] transition shadow-xs flex items-center gap-1 active:scale-95" title="Google Tradutor & Câmera">🌐 Tradutor</a>
             <button onclick="window.location.reload()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white px-2.5 py-1.5 rounded-lg font-bold text-[10px] transition shadow-xs border border-slate-700 active:scale-95" title="Atualizar Página">🔄</button>
             <button onclick="exportarPdfPrint()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1.5 rounded-lg font-bold text-[10px] transition shadow-xs active:scale-95" title="Imprimir Tudo">🖨️</button>
-            <span class="bg-indigo-950/80 text-indigo-200 border border-indigo-800/50 px-2 py-0.5 rounded-md font-mono font-bold text-[9px]">v289.0 (Pro)</span>
+            <span class="bg-indigo-950/80 text-indigo-200 border border-indigo-800/50 px-2 py-0.5 rounded-md font-mono font-bold text-[9px]">v289.1 (Pro)</span>
         </div>
     </header>
 
@@ -611,7 +611,7 @@
 
     <!-- BARRA DE FERRAMENTAS FIXA MODERNA COM BACKUP E RESTAURAÇÃO -->
     <nav class="fixed bottom-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-md text-white px-3 py-2.5 shadow-2xl border-t border-slate-800 text-xs flex items-center justify-around gap-1 overflow-x-auto no-scrollbar max-w-4xl mx-auto rounded-t-2xl">
-        <span class="bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 px-2 py-1 rounded-lg font-mono font-bold text-[9px] shrink-0">v289.0</span>
+        <span class="bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 px-2 py-1 rounded-lg font-mono font-bold text-[9px] shrink-0">v289.1</span>
         
         <button onclick="abrirGeminiModal()" class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white px-3 py-1.5 rounded-xl font-bold transition shrink-0 flex items-center gap-1.5 text-xs shadow-sm shadow-purple-900/30 active:scale-95">
             <span>✨</span> Gemini
@@ -3431,8 +3431,7 @@
                     let ativo = comprasFiltroTitulo.toLowerCase() === t.toLowerCase();
                     let corTitulo = obterCorPorTituloCompra(t);
                     let estiloBtn = ativo ? `background-color: ${corTitulo}; color: #ffffff; font-weight: bold;` : `background-color: #ffffff; color: #334155; border: 1px solid #cbd5e1;`;
-                    let classeAtivo = ativ
-o ? 'shadow-md ring-2 ring-slate-900 scale-105' : 'hover:bg-slate-50';
+                    let classeAtivo = ativo ? 'shadow-md ring-2 ring-slate-900 scale-105' : 'hover:bg-slate-50';
                     filtrosHtml += `<button type="button" onclick="filtrarComprasTitulo('${t.replace(/'/g, "\\'")}')" style="${estiloBtn}" class="px-3 py-1.5 rounded-xl text-xs shrink-0 transition active:scale-95 ${classeAtivo}">${t}</button>`;
                 });
                 containerFiltros.innerHTML = filtrosHtml;
@@ -7164,16 +7163,22 @@ body.v287-typing #v-fab,body.v287-typing #v283-act,body.v287-typing #v-top{displ
 
 /* MODAL CALENDÁRIO MENSAL & MONTAGEM */
 .v289-modal-overlay {
+  display: none !important;
   position: fixed;
   inset: 0;
   z-index: 350;
   background: rgba(15, 23, 42, 0.82);
   backdrop-filter: blur(6px);
-  display: flex;
   align-items: center;
   justify-content: center;
   padding: 12px;
   overflow-y: auto;
+}
+.v289-modal-overlay.ativo {
+  display: flex !important;
+}
+.v289-modal-overlay.hidden {
+  display: none !important;
 }
 .v289-modal-card {
   background: #ffffff;
@@ -7357,7 +7362,7 @@ details.v289-detalhes[open] summary, details.v289-detalhes-rotr[open] summary {
 </style>
 
 <!-- MODAIS DO CALENDÁRIO MENSAL E DA MONTAGEM POR ETAPAS -->
-<div id="v289-modal-calendario" class="v289-modal-overlay hidden" onclick="if(event.target===this)window.v289FecharCalendario()">
+<div id="v289-modal-calendario" class="v289-modal-overlay hidden" style="display:none !important;" onclick="if(event.target===this)window.v289FecharCalendario()">
   <div class="v289-modal-card">
     <!-- Header Calendário -->
     <div class="bg-gradient-to-r from-slate-900 to-indigo-950 text-white p-4 flex items-center justify-between border-b border-indigo-900/40">
@@ -7408,7 +7413,7 @@ details.v289-detalhes[open] summary, details.v289-detalhes-rotr[open] summary {
 </div>
 
 <!-- MODAL DE MONTAGEM POR ETAPAS DO DIA -->
-<div id="v289-modal-montador" class="v289-modal-overlay hidden" onclick="if(event.target===this)window.v289FecharMontador()">
+<div id="v289-modal-montador" class="v289-modal-overlay hidden" style="display:none !important;" onclick="if(event.target===this)window.v289FecharMontador()">
   <div class="v289-modal-card" style="max-width: 540px;">
     <!-- Header Montador -->
     <div class="bg-gradient-to-r from-indigo-900 to-slate-900 text-white p-3.5 flex items-center justify-between border-b border-indigo-800/40">
@@ -7541,8 +7546,7 @@ details.v289-detalhes[open] summary, details.v289-detalhes-rotr[open] summary {
               <div>
                 <label class="block text-[9px] font-bold text-slate-500 mb-0.5">Valor / Custo</label>
                 <div class="flex gap-1">
-                  <input type="number" step="0.5" id="v289-inp-valor" placehold
-er="0.00" class="w-full bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs text-slate-800">
+                  <input type="number" step="0.5" id="v289-inp-valor" placeholder="0.00" class="w-full bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs text-slate-800">
                   <select id="v289-inp-moeda" class="bg-white border border-slate-300 rounded-lg px-1 py-1 text-xs text-slate-800 font-bold">
                     <option value="EUR">€</option>
                     <option value="CHF">CHF</option>
@@ -7596,8 +7600,11 @@ er="0.00" class="w-full bg-white border border-slate-300 rounded-lg px-2 py-1 te
 
     <!-- Rodapé: Enviar para o Roteiro -->
     <div class="bg-slate-50 p-3 sm:p-4 border-t border-slate-200 flex items-center justify-between gap-2">
-      <button type="button" onclick="window.v289VoltarAoCalendario()" class="px-3 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold transition active:scale-95">
-        Voltar
+      <button type="button" onclick="window.v289FecharMontador()" class="px-3 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold transition active:scale-95" title="Fechar e voltar à página principal">
+        ✕ Fechar
+      </button>
+      <button type="button" onclick="window.v289VoltarAoCalendario()" class="px-3 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold transition active:scale-95" title="Voltar ao calendário mensal">
+        📅 Calendário
       </button>
       <button type="button" onclick="window.v289ConfirmarEnviarRoteiro()" class="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black py-2.5 px-4 rounded-xl text-xs transition shadow-md shadow-emerald-600/25 flex items-center justify-center gap-2 active:scale-95">
         <span>🚀</span> <span>Enviar para o Roteiro Oficial</span>
@@ -7663,7 +7670,6 @@ er="0.00" class="w-full bg-white border border-slate-300 rounded-lg px-2 py-1 te
 
   // 2. ABERTURA E RENDERIZAÇÃO DO CALENDÁRIO MENSAL
   window.v289AbrirCalendario = function(){
-    // Descobrir se há alguma data no itinerário para abrir no mês certo
     if(typeof dadosApp!=='undefined' && Array.isArray(dadosApp.itinerario)){
       var blocoComData = dadosApp.itinerario.find(function(b){ return b.dataInicio; });
       if(blocoComData){
@@ -7676,12 +7682,20 @@ er="0.00" class="w-full bg-white border border-slate-300 rounded-lg px-2 py-1 te
     }
     renderizarGradeCalendario();
     var m = $('v289-modal-calendario');
-    if(m) m.classList.remove('hidden');
+    if(m){
+      m.style.setProperty('display', 'flex', 'important');
+      m.classList.remove('hidden');
+      m.classList.add('ativo');
+    }
   };
 
   window.v289FecharCalendario = function(){
     var m = $('v289-modal-calendario');
-    if(m) m.classList.add('hidden');
+    if(m){
+      m.style.setProperty('display', 'none', 'important');
+      m.classList.add('hidden');
+      m.classList.remove('ativo');
+    }
   };
 
   window.v289CalMudarMes = function(delta){
@@ -7844,12 +7858,20 @@ er="0.00" class="w-full bg-white border border-slate-300 rounded-lg px-2 py-1 te
     renderizarPreviaTimeline();
 
     var m = $('v289-modal-montador');
-    if(m) m.classList.remove('hidden');
+    if(m){
+      m.style.setProperty('display', 'flex', 'important');
+      m.classList.remove('hidden');
+      m.classList.add('ativo');
+    }
   };
 
   window.v289FecharMontador = function(){
     var m = $('v289-modal-montador');
-    if(m) m.classList.add('hidden');
+    if(m){
+      m.style.setProperty('display', 'none', 'important');
+      m.classList.add('hidden');
+      m.classList.remove('ativo');
+    }
   };
 
   window.v289VoltarAoCalendario = function(){
@@ -8343,4 +8365,3 @@ er="0.00" class="w-full bg-white border border-slate-300 rounded-lg px-2 py-1 te
 
 </body>
 </html>
-Exibindo roteiro_europa_v289.html…
