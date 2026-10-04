@@ -9348,388 +9348,218 @@ details.v289-detalhes[open] summary, details.v289-detalhes-rotr[open] summary {
 </script>
 <!--/V295-->
 <!--V296-->
+<!-- CAMADA v296: (1) mapa do topo do card em transporte público com todos os pontos, (2) 🗺️ por trecho ao lado de "+ linhas" e "nota",
+     (3) ✕ para excluir o bloco inteiro, (4) card do dia atual pisca sozinho, (5) Agenda e bolinha 📅 responsivas, abrindo já no dia com rotas.
+     Cole logo ANTES de </body>, depois da v295. Não precisa remover nada. -->
 <style>
-/* quadro de aprovados some */
-.v284-pc,.v284-show{display:none!important}
-#v294-md{display:none!important}
+/* ---------- pisca: dia atual ---------- */
+@keyframes v296p{0%,100%{box-shadow:0 0 0 0 rgba(236,72,153,.85),0 6px 20px rgba(236,72,153,.2);outline-color:rgba(236,72,153,.95)}50%{box-shadow:0 0 0 12px rgba(236,72,153,0),0 6px 24px rgba(236,72,153,.45);outline-color:rgba(236,72,153,.25)}}
+@keyframes v296n{0%,100%{box-shadow:0 0 0 0 rgba(99,102,241,.7);outline-color:rgba(99,102,241,.9)}50%{box-shadow:0 0 0 10px rgba(99,102,241,0);outline-color:rgba(99,102,241,.25)}}
+.v295-card.v296-now{outline:3px solid #ec4899;outline-offset:2px;animation:v296p 1.4s ease-in-out infinite}
+.v295-card.v296-next{outline-color:#6366f1;animation:v296n 2.4s ease-in-out infinite}
+.v294-d.h{animation:v296p 1.4s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){.v295-card.v296-now,.v295-card.v296-next,.v294-d.h{animation:none}}
+.v296-badge{flex:none;background:#ec4899;color:#fff;font-size:10px;font-weight:800;letter-spacing:.04em;padding:2px 8px;border-radius:999px}
+.v296-badge.n{background:#6366f1}
 
-/* linhas estilo Google Maps */
-.v293-ln{align-items:center}
-.v293-lc{border-radius:4px!important;transform:skewX(-10deg);font-weight:800!important;font-size:13px!important;padding:2px 9px!important;box-shadow:inset 0 -2px 0 rgba(0,0,0,.14);cursor:pointer}
-.v293-lc span{display:inline-block;transform:skewX(10deg)}
-.v295-ti{font-size:18px;margin:4px 8px 0 0;display:inline-block;vertical-align:middle}
+/* ---------- botões do cabeçalho do card ---------- */
+.v295-ch .v296-hb,.v295-ch .v296-x{flex:none;width:32px;height:32px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;font-size:15px;padding:0;text-decoration:none;cursor:pointer}
+.v295-ch .v296-hb{border:1px solid #c7d2fe;background:#eef2ff;color:#3730a3}
+.v295-ch .v296-x{border:1px solid #fecdd3;background:#fff1f2;color:#e11d48;font-weight:800;font-size:14px}
+.v295-ch .v296-x:active,.v295-ch .v296-hb:active{transform:scale(.92)}
+/* mapa de cada trecho, ao lado de "+ linhas" e "nota" */
+.v295-cr a.v296-mp{padding:3px 10px;border-radius:999px;border:1px solid #38bdf8;background:#e0f2fe;color:#075985;font-size:12px;font-weight:800;text-decoration:none;white-space:nowrap}
 
-/* cores que descem embaixo de cada linha digitada */
-.v296-pv{margin-top:6px;display:flex;flex-direction:column;gap:6px}
-.v296-pv .it{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:6px 8px}
-.v296-sw{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px;align-items:center}
-.v296-sw button{width:22px;height:22px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px #cbd5e1;padding:0}
-.v296-sw input[type=color]{width:26px;height:26px;padding:0;border:0;background:none}
-.v296-hint{font-size:11px;color:#64748b}
+/* ---------- confirmação de excluir ---------- */
+#v296-dg{position:fixed;inset:0;z-index:900;background:rgba(15,23,42,.75);display:flex;align-items:center;justify-content:center;padding:16px}
+#v296-dg .b{background:#fff;color:#0f172a;border-radius:20px;padding:18px;width:100%;max-width:340px;font-size:14px}
+#v296-dg h3{margin:0 0 6px;font-size:17px}#v296-dg p{margin:0 0 14px;color:#475569}
+#v296-dg .r{display:flex;gap:8px;justify-content:flex-end}
+#v296-dg button{padding:10px 14px;border:0;border-radius:11px;font-weight:800;background:#e2e8f0;color:#0f172a}
+#v296-dg button.d{background:#e11d48;color:#fff}
 
-/* paradas do painel: linhas, zona e comentário */
-#v293-ps .r{flex-wrap:wrap}
-.v296-sx{flex:1 1 100%;display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 4px}
-.v296-sx input{flex:1 1 45%;min-width:0}
-.v296-sx input.scm{flex:1 1 100%}
-.v296-sx .pvs{flex:1 1 100%}
-
-/* botão e formulário por ponto */
-.v295-al{display:inline-block;margin-top:4px;padding:3px 9px;border-radius:999px;border:1px dashed #6366f1;background:#eef2ff;color:#3730a3;font-size:11px;font-weight:800}
-.v295-fm{margin:2px 0 8px 56px;padding:8px;border-radius:12px;background:#fff;border:1px solid #c7d2fe;display:flex;flex-direction:column;gap:6px}
-.v295-fm input,.v295-fm select{width:100%;padding:9px;border:1px solid #cbd5e1;border-radius:10px;font-size:14px;color:#0f172a;background:#fff;min-width:0}
-.v295-fm .rw{display:flex;gap:6px}
-.v295-fm button{padding:8px 12px;border-radius:10px;border:1px solid #c7d2fe;background:#eef2ff;color:#3730a3;font-weight:800;font-size:12px}
-.v295-fm button.ok{background:linear-gradient(135deg,#6366f1,#7c3aed);color:#fff;border:0}
-.v295-fm .lb{font-size:11px;font-weight:800;color:#475569}
-
-/* zonas */
-.v296-zs{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-top:8px;padding:6px 8px;border-radius:12px;background:rgba(255,255,255,.7)}
-.v296-zs b{font-size:12px}
-.v296-zt,.v296-pz{display:inline-flex;gap:5px;align-items:center;padding:2px 9px;border-radius:999px;background:#fef9c3;border:1px solid #fde047;color:#713f12;font-size:12px;font-weight:800}
-.v296-zt i{font-style:normal;cursor:pointer;color:#b45309}
-.v296-pz{margin:3px 4px 0 0;font-size:11px}
-
-/* popup de cor */
-#v295-pp{position:fixed;inset:0;z-index:900;background:rgba(15,23,42,.6);display:flex;align-items:center;justify-content:center;padding:16px}
-#v295-pp .b{background:#fff;color:#0f172a;border-radius:20px;padding:16px;width:100%;max-width:320px}
-#v295-pp .pl{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
-#v295-pp .pl button{width:34px;height:34px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px #cbd5e1}
-#v295-pp .rw{display:flex;gap:8px;align-items:center;margin-top:8px}
-#v295-pp input[type=color]{width:44px;height:40px;padding:2px;border:1px solid #cbd5e1;border-radius:10px;background:#fff}
-#v295-pp .bt{padding:9px 12px;border-radius:10px;border:1px solid #c7d2fe;background:#eef2ff;color:#3730a3;font-weight:800;font-size:13px}
-#v295-pp .bt.rm{background:#fee2e2;border-color:#fecaca;color:#b91c1c}
-
-/* bolha do calendário na pilha da direita, antes da seta */
-#v294-bl{position:fixed!important;right:8px!important;left:auto!important;top:auto!important;bottom:180px!important;width:36px!important;height:36px!important;font-size:16px!important;opacity:.65!important;background:linear-gradient(135deg,#0ea5e9,#6366f1)!important;box-shadow:0 3px 10px rgba(0,0,0,.2)!important;z-index:70!important;touch-action:manipulation!important}
-#v-top{bottom:224px!important}
-body.v-menu-off #v294-bl{bottom:122px!important}
-body.v-menu-off #v-top{bottom:166px!important}
+/* ---------- AGENDA e bolinha 📅 responsivas ---------- */
+#v294-ag{overflow:hidden;max-width:100%}
+.v294-nav{flex-wrap:wrap}
+.v294-nav select{flex:1 1 120px;min-width:0}
+.v294-nav input[type=number]{flex:0 0 80px;min-width:0;width:80px}
+.v294-nav .sp{display:none}
+.v294-nav .v294-b{flex:0 0 auto}
+.v294-g{gap:2px}
+.v294-d{min-width:0;min-height:38px;font-size:12px}
+#v294-dd{min-width:0}
+#v294-dd .v295-card,#v294-bd .v295-card{min-width:0;max-width:100%;overflow:hidden}
+#v294-md{padding-top:env(safe-area-inset-top,0px)}
+#v294-md>div{width:100%;max-width:560px;max-height:92vh;max-height:92dvh;box-sizing:border-box;overflow-x:hidden}
+#v294-md .v294-nav input[type=date]{flex:1 1 130px;min-width:0;width:auto}
+@media (max-width:480px){
+  .v295-th .tt{font-size:16px}
+  .v295-h{font-size:15px}
+  .v295-pn .rw{flex-wrap:wrap}
+  .v295-pn .rw>input,.v295-pn .rw>select{flex:1 1 90px}
+  .v295-ch{gap:6px}
+  .v295-ch .dt{flex:1 1 100%;order:5}
+}
+/* bolinhas flutuantes empilhadas, sem uma cobrir a outra */
+#v294-bl:not([style*="left"]){right:8px!important;bottom:180px!important;width:38px!important;height:38px!important;font-size:17px!important}
+body.v-menu-off #v294-bl:not([style*="left"]){bottom:122px!important}
+#v-top{bottom:226px!important}
+body.v-menu-off #v-top{bottom:168px!important}
 body.v287-typing #v294-bl{display:none!important}
-
-/* calendário no meio da tela */
-#v296-md{position:fixed;inset:0;z-index:780;background:rgba(15,23,42,.85);display:none;align-items:center;justify-content:center;padding:12px}
-#v296-md .bx{width:100%;max-width:560px;max-height:88vh;overflow-y:auto;background:#f4f3ff;border-radius:24px;padding:12px;box-shadow:0 20px 50px rgba(0,0,0,.4)}
-#v296-md .dh{font-weight:800;font-size:14px;margin:12px 0 6px;color:#0f172a}
-#v296-md .nd{background:#fff;border-radius:16px;padding:14px;text-align:center;color:#64748b}
-#v296-md .cds{display:flex;flex-direction:column;gap:8px}
 </style>
-<datalist id="v296-zl"><option value="Zona 110 (Zurique)"><option value="Zona 1"><option value="Zona 2"><option value="Zona 3"><option value="Zona 4"><option value="Zona 5"><option value="Zona 6"><option value="Todas as zonas"></datalist>
 <script>
 (function(){
   var $=function(i){return document.getElementById(i)};
   function T(m,t){if(window.mostrarToast)mostrarToast(m,t||'info')}
-  function esc(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
   function sv(){try{salvarStorage()}catch(e){}}
   function ap(){try{atualizarTudo()}catch(e){}}
   function undo(){try{registarEstadoAnterior()}catch(e){}}
   function pad(n){return n<10?'0'+n:''+n}
-  function fmt(d){return d?d.split('-').reverse().join('/'):'?'}
+  function hoje(){var d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
   function item(id){return (dadosApp.itinerario||[]).filter(function(i){return String(i.id)===String(id)})[0]}
-  function trc(it,id){return it&&(it.trechos||[]).filter(function(t){return String(t.id)===String(id)})[0]}
-  var n0=new Date(),HOJE=n0.getFullYear()+'-'+pad(n0.getMonth()+1)+'-'+pad(n0.getDate());
-  var ICO={'Trem':'🚆','Ônibus':'🚌','Metrô':'🚇','Carro':'🚗','A pé':'🚶','Avião':'✈️','Outro':'📦'};
-  var PAL=['#e2231a','#6ab42d','#4caf7a','#1e3a6e','#0d9488','#ea580c','#7c3aed','#db2777','#0891b2','#475569'];
-  var PAL2=PAL.concat(['#f59e0b','#111827']);
-  function hs(s){var h=0;for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return h}
-  function auto(n){var u=String(n).toUpperCase().replace(/\s/g,'');if(/^(IR|IC|ICE|EC|RJ|TGV|RE)/.test(u))return PAL[0];
-    if(/^S\d/.test(u)){var g=['#6ab42d','#4caf7a','#2e8b57','#1e3a6e','#0d9488'];return g[hs(u)%g.length]}return PAL[hs(u)%PAL.length]}
-  function corDe(l){var m=(dadosApp.coresLinhas||{})[String(l.nome).toUpperCase()];return m||l.cor||auto(l.nome)}
-  function nomes(v){return String(v||'').split(',').map(function(x){return x.trim()}).filter(Boolean)}
+  function temRota(b){return (b.trechos||[]).some(function(t){return t.origem||t.destino})}
 
-  /* ---------- cores das linhas ---------- */
-  function setCor(nome,cor){
-    undo();dadosApp.coresLinhas=dadosApp.coresLinhas||{};dadosApp.coresLinhas[String(nome).toUpperCase()]=cor;
-    (dadosApp.itinerario||[]).forEach(function(b){(b.trechos||[]).forEach(function(t){(t.conducoes||[]).forEach(function(c){(c.linhas||[]).forEach(function(l){
-      if(String(l.nome).toUpperCase()===String(nome).toUpperCase())l.cor=cor})})})});
-    sv();ap();pv();
+  /* ---------- link do Maps SEMPRE em transporte público ---------- */
+  function path(names){return 'https://www.google.com/maps/dir/'+names.map(function(n){return encodeURIComponent(n||'')}).join('/')+'/data=!4m2!4m1!3e3'}
+  function toTransit(href){
+    try{
+      var u=new URL(href);
+      if(u.pathname.indexOf('/maps/dir/')>-1&&u.pathname.length>10)return href;
+      var o=u.searchParams.get('origin'),d=u.searchParams.get('destination'),w=u.searchParams.get('waypoints'),n=[];
+      if(!d)return href;
+      n.push(o||'');if(w)w.split('|').forEach(function(x){if(x)n.push(x)});n.push(d);
+      return path(n);
+    }catch(e){return href}
   }
-  function setLite(nome,cor){dadosApp.coresLinhas=dadosApp.coresLinhas||{};dadosApp.coresLinhas[String(nome).toUpperCase()]=cor;sv()}
-  function prevHtml(list){
-    return list.map(function(n){var cor=corDe({nome:n}),ok=/^#[0-9a-f]{6}$/i.test(cor)?cor:'#e2231a';
-      return '<div class="it"><span class="v293-ln"><span class="v293-lc" data-n="'+esc(n)+'" style="background:'+esc(cor)+'"><span>'+esc(n)+'</span></span></span><div class="v296-sw">'+
-        PAL2.map(function(c){return '<button type="button" data-sw="'+c+'" data-n="'+esc(n)+'" style="background:'+c+'" aria-label="Cor"></button>'}).join('')+
-        '<input type="color" data-swc="'+esc(n)+'" value="'+ok+'" aria-label="Cor livre"></div></div>'}).join('');
-  }
-  function fillPv(box,val){if(!box)return;var l=nomes(val);box.className=(box.className.replace(/\bv296-pv\b/,'')+' v296-pv').trim();
-    box.innerHTML=l.length?prevHtml(l)+'<div class="v296-hint">Escolha a cor de cada linha, como no Google.</div>':''}
-  function swClick(e,refresh){var b=e.target.closest('[data-sw]');if(!b)return false;setLite(b.dataset.n,b.dataset.sw);refresh(b);return true}
+  function stop(a){a.addEventListener('click',function(e){e.stopPropagation()})}
 
-  function popup(nome,ds){
-    var old=$('v295-pp');if(old)old.remove();
-    var m=document.createElement('div');m.id='v295-pp';var cur=corDe({nome:nome});
-    m.innerHTML='<div class="b"><b style="font-size:16px">Linha '+esc(nome)+'</b><div class="pl">'+PAL2.map(function(c){return '<button type="button" data-c="'+c+'" style="background:'+c+'" aria-label="Cor"></button>'}).join('')+'</div>'+
-      '<div class="rw"><input type="color" value="'+(/^#[0-9a-f]{6}$/i.test(cur)?cur:'#e2231a')+'"><span style="flex:1;font-size:12px;color:#64748b">Cor livre</span></div>'+
-      '<div class="rw" style="margin-top:12px"><button type="button" class="bt" data-a="x" style="flex:1">Fechar</button>'+(ds&&ds.cid?'<button type="button" class="bt rm" data-a="rm">🗑 Remover da rota</button>':'')+'</div></div>';
+  /* todos os pontos do bloco, na ordem (junta o fim de uma rota com o começo da próxima) */
+  function pontos(it){
+    var out=[];
+    (it.trechos||[]).forEach(function(tr){
+      if(!(tr.origem||tr.destino)||!window.v277Percurso)return;
+      window.v277Percurso(it,tr).pts.forEach(function(p){var n=(p.nome||'').trim();if(n&&out[out.length-1]!==n)out.push(n)});
+    });
+    return out;
+  }
+
+  /* ---------- data alvo (hoje, ou o próximo dia com rota) ---------- */
+  function alvoData(){
+    var h=hoje(),r=(dadosApp.itinerario||[]).filter(temRota).map(function(b){return [b.dataInicio,b.dataFim||b.dataInicio]}).filter(function(x){return x[0]});
+    if(!r.length)return null;
+    if(r.some(function(x){return x[0]<=h&&h<=x[1]}))return h;
+    var fut=r.filter(function(x){return x[0]>h}).map(function(x){return x[0]}).sort();
+    if(fut.length)return fut[0];
+    return r.map(function(x){return x[1]}).sort().pop();
+  }
+
+  /* ---------- exclusão do bloco inteiro ---------- */
+  function confirmaExcluir(id){
+    var it=item(id);if(!it)return;
+    var m=document.createElement('div');m.id='v296-dg';
+    m.innerHTML='<div class="b"><h3></h3><p>Todas as rotas e paradas deste bloco serão removidas. Se for engano, use ↩️ Desfazer logo em seguida.</p><div class="r"><button type="button" class="c">Cancelar</button><button type="button" class="d">🗑 Excluir bloco</button></div></div>';
+    m.querySelector('h3').textContent='Excluir o bloco “'+(it.categoria||'sem nome')+'”?';
     document.body.appendChild(m);
     m.addEventListener('click',function(e){
-      if(e.target===m){m.remove();return}
-      var b=e.target.closest('button');if(!b)return;
-      if(b.dataset.c){setCor(nome,b.dataset.c);m.remove();return}
-      if(b.dataset.a==='x'){m.remove();return}
-      if(b.dataset.a==='rm'){var it=item(ds.ii),tr=trc(it,ds.tt),c=tr&&(tr.conducoes||[]).filter(function(x){return String(x.id)===String(ds.cid)})[0];
-        if(c){undo();c.linhas=(c.linhas||[]).filter(function(l){return String(l.id)!==String(ds.lid)});sv();ap()}m.remove()}});
-    m.querySelector('input[type=color]').addEventListener('change',function(e){setCor(nome,e.target.value);m.remove()});
+      if(e.target===m||e.target.closest('.c')){m.remove();return}
+      if(e.target.closest('.d')){
+        m.remove();undo();
+        dadosApp.itinerario=(dadosApp.itinerario||[]).filter(function(b){return String(b.id)!==String(id)});
+        sv();ap();T('Bloco excluído. Use ↩️ Desfazer para voltar.','info');
+      }
+    });
   }
 
-  /* ---------- zonas ---------- */
-  function addZona(it,local,zona){it.zonasLista=it.zonasLista||[];
-    if(!it.zonasLista.some(function(z){return String(z.local).toLowerCase()===String(local).toLowerCase()&&String(z.zona).toLowerCase()===String(zona).toLowerCase()}))
-      it.zonasLista.push({id:'z'+Date.now()+Math.floor(Math.random()*999),local:local,zona:zona})}
-  function setZona(it,local,zona){it.zonasLista=it.zonasLista||[];
-    var z=it.zonasLista.filter(function(x){return String(x.local).toLowerCase()===String(local).toLowerCase()})[0];
-    if(z)z.zona=zona;else it.zonasLista.push({id:'z'+Date.now()+Math.floor(Math.random()*999),local:local,zona:zona})}
-  function zBlock(it,edit){
-    var l=it.zonasLista||[],ob=(it.zonas||'').trim();
-    if(!edit&&!l.length&&!ob)return '';
-    return '<div class="v296-zs"><b>🎫 Zonas</b>'+l.map(function(z){return '<span class="v296-zt">'+esc(z.local)+' · '+esc(z.zona)+(edit?' <i data-q="zx" data-zid="'+esc(z.id)+'" data-ii="'+esc(it.id)+'">✕</i>':'')+'</span>'}).join('')+
-      (ob?'<span style="font-size:12px;font-weight:600">'+esc(ob)+'</span>':'')+
-      (edit?'<button type="button" class="v295-al" data-q="zadd" data-ii="'+esc(it.id)+'">＋ Zona</button>':'')+'</div>';
-  }
-  function zPt(it,nome){return (it.zonasLista||[]).filter(function(z){return String(z.local).toLowerCase()===String(nome||'').toLowerCase()}).map(function(z){return '<span class="v296-pz">🎫 '+esc(z.zona)+'</span>'}).join('')}
-  function abreZ(b){
-    var blk=b.closest('.v296-zs'),nx=blk.nextElementSibling;
-    if(nx&&nx.classList.contains('v296-zf')){nx.remove();return}
-    var it=item(b.dataset.ii);if(!it)return;
-    var pts=[it.categoria];(it.trechos||[]).forEach(function(t){pts.push(t.origem,t.destino)});(it.paradas||[]).forEach(function(p){pts.push(p.local)});
-    var seen={},opts=pts.filter(function(x){if(!x||seen[x])return false;return seen[x]=1}).map(function(x){return '<option value="'+esc(x)+'">'}).join('');
-    var f=document.createElement('div');f.className='v295-fm v296-zf';f.style.marginLeft='0';f.dataset.ii=it.id;
-    f.innerHTML='<div class="lb">Em que lugar vale esta zona?</div><input class="zl" list="v296-zlc" value="'+esc(it.categoria)+'"><datalist id="v296-zlc">'+opts+'</datalist><div class="lb">Qual zona?</div><input class="zn" list="v296-zl" placeholder="Ex.: Zona 110 (Zurique)">'+
-      '<div class="rw"><button type="button" class="ok" data-q="zok" style="flex:1">✓ Adicionar zona</button><button type="button" data-q="zno">Cancelar</button></div>';
-    blk.insertAdjacentElement('afterend',f);f.querySelector('.zn').focus();
-  }
-
-  /* ---------- cards da lista ---------- */
-  function decor(){
-    var root=$('v293-lista');if(!root||!window.v277Percurso)return;
-    try{
-      [].forEach.call(root.querySelectorAll('.v293-card'),function(card){
-        var chd=card.querySelector('.v293-ch[data-i]'),it0=chd&&item(chd.dataset.i);
-        if(it0&&!card.querySelector('.v296-zs'))chd.insertAdjacentHTML('afterend',zBlock(it0,true));
+  /* ---------- decora os cards (idempotente) ---------- */
+  var h0=hoje();
+  function decorar(){
+    var nextId=null,h=hoje(),temHoje=false;
+    var its=(dadosApp.itinerario||[]).filter(temRota);
+    its.forEach(function(b){var a=b.dataInicio,z=b.dataFim||a;if(a&&a<=h&&h<=z)temHoje=true});
+    if(!temHoje){
+      var fut=its.filter(function(b){return b.dataInicio&&b.dataInicio>h}).sort(function(a,b){return a.dataInicio<b.dataInicio?-1:1})[0];
+      if(fut)nextId=String(fut.id);
+    }
+    [].forEach.call(document.querySelectorAll('.v295-card'),function(card){
+      var it=item(card.dataset.i);if(!it)return;
+      var a=it.dataInicio,z=it.dataFim||a,ehHoje=!!(a&&a<=h&&h<=z),ehProx=!ehHoje&&nextId!==null&&String(it.id)===nextId;
+      card.classList.toggle('v296-now',ehHoje);
+      card.classList.toggle('v296-next',ehProx);
+      var ch=card.querySelector('.v295-ch');
+      if(ch){
+        var bd=ch.querySelector('.bd'),old=ch.querySelector('.v296-badge');
+        var txt=ehHoje?'HOJE':ehProx?'PRÓXIMO':'';
+        if(old&&old.textContent!==txt){old.remove();old=null}
+        if(txt&&!old&&bd){var s=document.createElement('span');s.className='v296-badge'+(ehProx?' n':'');s.textContent=txt;bd.insertAdjacentElement('afterend',s)}
+        if(!ch.querySelector('.v296-hb')){
+          var nm=pontos(it);
+          var l=document.createElement('a');l.className='v296-hb';l.target='_blank';l.rel='noopener';l.textContent='🗺️';
+          l.title='Rota de transporte público por todos os pontos';l.setAttribute('aria-label',l.title);
+          l.href=nm.length>=2?path(nm):(nm[0]?path(['',nm[0]]):'https://www.google.com/maps');
+          stop(l);ch.appendChild(l);
+          var x=document.createElement('button');x.type='button';x.className='v296-x';x.textContent='✕';
+          x.title='Excluir este bloco';x.setAttribute('aria-label','Excluir bloco');
+          x.addEventListener('click',function(e){e.stopPropagation();confirmaExcluir(card.dataset.i)});
+          ch.appendChild(x);
+        }
+      }
+      /* todo link de Maps dentro do card vira transporte público */
+      [].forEach.call(card.querySelectorAll('a[href*="google.com/maps/dir"]:not([data-v296])'),function(a){
+        if(a.classList.contains('v296-hb')){a.dataset.v296='1';return}
+        a.href=toTransit(a.href);a.dataset.v296='1';stop(a);
       });
-      [].forEach.call(root.querySelectorAll('.v293-sh'),function(sh){
-        var b=sh.querySelector('button[data-t]');if(!b)return;
-        var it=item(b.dataset.i),tr=trc(it,b.dataset.t);if(!tr)return;
-        var P=window.v277Percurso(it,tr);
-        [].forEach.call(sh.querySelectorAll('.v293-lc'),function(c){
-          var n=c.textContent.trim();c.dataset.n=n;c.dataset.ii=it.id;c.dataset.tt=tr.id;
-          var k=(dadosApp.coresLinhas||{})[n.toUpperCase()];if(k)c.style.background=k});
-        var cont=[].filter.call(sh.children,function(e){return e.tagName==='DIV'&&!e.className&&e.querySelector('.v293-ln')})[0];
-        if(cont&&!cont.querySelector('.v295-ti'))cont.insertAdjacentHTML('afterbegin','<span class="v295-ti">🚆</span>');
-        var rows=[].filter.call(sh.children,function(e){return e.classList.contains('v293-r')}),j=-1,k=0;
-        rows.forEach(function(r){
-          if(r.classList.contains('v293-lg')){
-            var L=P.legs[j]&&P.legs[j][k++];if(!L)return;
-            [].forEach.call(r.querySelectorAll('.v293-lc'),function(ch,ci){var l=(L.c.linhas||[])[ci];if(l){ch.dataset.cid=L.c.id;ch.dataset.lid=l.id}});
-          }else{
-            j++;k=0;
-            if(j<P.pts.length&&!r.querySelector('.v295-al')){
-              var c=r.querySelector('.c');
-              if(c)c.insertAdjacentHTML('beforeend',zPt(it,P.pts[j].nome)+'<div><button type="button" class="v295-al" data-q="al" data-ii="'+esc(it.id)+'" data-tt="'+esc(tr.id)+'" data-j="'+j+'">🚏 linhas · 🎫 zona · 💬</button></div>');
-            }
-          }
+      /* 🗺️ de cada trecho, ao lado de "+ linhas" e "nota" */
+      [].forEach.call(card.querySelectorAll('.v295-tl'),function(tl){
+        var rows=[].slice.call(tl.children);
+        rows.forEach(function(r,i){
+          if(!r.classList.contains('v295-l'))return;
+          var src=rows[i-1],dst=rows[i+1];if(!src||!dst||src.querySelector('.v296-mp'))return;
+          var nb=function(row){var b=row.querySelector('.v295-h b');return b?b.textContent.trim().replace(/^—$/,''):''};
+          var de=nb(src),para=nb(dst),cr=src.querySelector('.v295-cr');if(!cr)return;
+          var a=document.createElement('a');a.className='v296-mp';a.target='_blank';a.rel='noopener';a.textContent='🗺️ mapa';
+          a.title='Mapa em transporte público: '+(de||'?')+' → '+(para||'?');a.setAttribute('aria-label',a.title);
+          a.href=path([de,para]);a.dataset.v296='1';stop(a);
+          var ref=cr.querySelector('button[data-fx]');
+          if(ref)ref.insertAdjacentElement('afterend',a);else cr.insertBefore(a,cr.firstChild);
         });
       });
-    }catch(e){console.error('v296',e)}
-  }
-
-  function abreForm(b){
-    var r=b.closest('.v293-r'),nx=r.nextElementSibling;
-    if(nx&&nx.classList.contains('v295-fm')){nx.remove();return}
-    var it=item(b.dataset.ii),tr=trc(it,b.dataset.tt),j=+b.dataset.j;if(!tr)return;
-    var P=window.v277Percurso(it,tr),pt=P.pts[j],last=j===P.pts.length-1,leg=P.legs[j]||[],c=leg[0]&&leg[0].c;
-    var base=(c&&c.transporte)||(((tr.conducoes||[])[0]||{}).transporte)||'Trem';
-    var ptxt=pt.k==='p'?(pt.p.texto||''):pt.k==='o'?(tr.textoSaida||''):(tr.textoChegada||'');
-    var zz=(it.zonasLista||[]).filter(function(z){return String(z.local).toLowerCase()===String(pt.nome).toLowerCase()})[0];
-    var f=document.createElement('div');f.className='v295-fm';f.dataset.ii=it.id;f.dataset.tt=tr.id;f.dataset.j=j;f.dataset.last=last?'1':'';
-    f.innerHTML='<div class="lb">📍 '+esc(pt.nome||'Ponto')+'</div>'+
-      '<input class="pc" placeholder="📝 Comentário deste ponto" value="'+esc(ptxt)+'">'+
-      '<input class="zn" list="v296-zl" placeholder="🎫 Zona deste ponto" value="'+esc(zz?zz.zona:'')+'">'+
-      (last?'':'<div class="lb">Do ponto até o próximo:</div><input class="ln" placeholder="🚏 Linhas que pegar (ex.: IR13, S2)"><div class="pvw"></div>'+
-        '<input class="cm" placeholder="💬 Comentário do trecho (plataforma, tempo…)" value="'+esc(c?c.notas:'')+'">'+
-        '<select class="md">'+['Trem','Ônibus','Metrô','A pé','Carro'].map(function(m){return '<option'+(m===base?' selected':'')+'>'+m+'</option>'}).join('')+'</select>')+
-      '<div class="rw"><button type="button" class="ok" data-q="ok" style="flex:1">✓ Salvar</button><button type="button" data-q="no">Cancelar</button></div>';
-    r.insertAdjacentElement('afterend',f);
-  }
-  function salvaForm(f){
-    var it=item(f.dataset.ii),tr=trc(it,f.dataset.tt);if(!tr)return;var j=+f.dataset.j;
-    var P=window.v277Percurso(it,tr),pt=P.pts[j],q=function(s){var x=f.querySelector(s);return x?x.value.trim():''};
-    undo();
-    var pc=q('.pc');
-    if(pt.k==='p')pt.p.texto=pc;else if(pt.k==='o')tr.textoSaida=pc;else tr.textoChegada=pc;
-    var zn=q('.zn');if(zn)setZona(it,pt.nome||it.categoria,zn);
-    if(!f.dataset.last){
-      var leg=P.legs[j]||[],c,md=q('.md');
-      if(leg.length)c=leg[0].c;
-      else{c={id:'c'+Date.now(),transporte:md,valor:0,moeda:'EUR',notas:'',fotosExtras:[],perna:j+1};(tr.conducoes=tr.conducoes||[]).push(c)}
-      c.transporte=md;c.linhas=c.linhas||[];
-      nomes(q('.ln')).forEach(function(n,i){
-        if(!c.linhas.some(function(l){return String(l.nome).toUpperCase()===n.toUpperCase()}))c.linhas.push({id:'l'+Date.now()+i,nome:n,cor:corDe({nome:n})})});
-      c.notas=q('.cm');
-    }
-    sv();ap();T('Ponto atualizado!','sucesso');
-  }
-
-  /* ---------- painel "Digitar nova rota" ---------- */
-  function stops(){
-    var ps=$('v293-ps');if(!ps)return;
-    [].forEach.call(ps.querySelectorAll('.r'),function(r){
-      if(r.querySelector('.v296-sx'))return;
-      r.insertAdjacentHTML('beforeend','<div class="v296-sx"><input class="sln" placeholder="🚏 Linhas ao sair daqui (IR13, S2)"><input class="szn" list="v296-zl" placeholder="🎫 Zona"><input class="scm" placeholder="💬 Comentário da parada"><div class="pvs"></div></div>');
     });
-    if(!ps.dataset.o296){ps.dataset.o296=1;new MutationObserver(function(){setTimeout(stops,0)}).observe(ps,{childList:true})}
-  }
-  function pv(){
-    var mk=$('v293-mk'),ln=$('v293-ln');if(!mk||!ln)return;
-    var h1=$('v293-h1'),h2=$('v293-h2');
-    if(h1&&h1.parentElement)h1.parentElement.style.display='none';
-    if(h2&&h2.parentElement)h2.parentElement.style.display='none';
-    var box=$('v295-pv');
-    if(!box){box=document.createElement('div');box.id='v295-pv';ln.parentElement.insertAdjacentElement('afterend',box)}
-    fillPv(box,ln.value);
-    if(!$('v296-zw')){var d1=$('v293-d1');if(d1&&d1.parentElement)d1.parentElement.insertAdjacentHTML('afterend','<div class="f" id="v296-zw"><input id="v296-zn" list="v296-zl" placeholder="🎫 Zona deste destino (ex.: Zona 110 Zurique)"></div>')}
-    stops();
-  }
-  function addLinhas(c,str){c.linhas=c.linhas||[];nomes(str).forEach(function(n,i){
-    if(!c.linhas.some(function(l){return String(l.nome).toUpperCase()===n.toUpperCase()}))c.linhas.push({id:'l'+Date.now()+i,nome:n,cor:corDe({nome:n})})})}
-  function aplica(s){
-    var it=null,tr=null;
-    (dadosApp.itinerario||[]).some(function(b){
-      if(b.categoria!==s.ci)return false;
-      var t=(b.trechos||[]).slice().reverse().filter(function(t){return t.origem===s.or&&t.destino===s.de})[0];
-      if(t){it=b;tr=t;return true}return false});
-    if(!tr)return;
-    var ps=(it.paradas||[]).filter(function(p){return String(p.apos)===String(tr.id)}),ch=false;
-    if(s.zn){addZona(it,s.ci,s.zn);ch=true}
-    s.st.forEach(function(x,i){
-      var p=ps[i];
-      if(p&&x.cm){p.texto=x.cm;ch=true}
-      if(x.zn){setZona(it,x.n,x.zn);ch=true}
-      if(x.ln){var P=window.v277Percurso(it,tr),leg=P.legs[i+1]||[],c;
-        if(leg.length)c=leg[0].c;
-        else{c={id:'c'+Date.now()+i,transporte:s.mode,valor:0,moeda:'EUR',notas:'',fotosExtras:[],perna:i+2};(tr.conducoes=tr.conducoes||[]).push(c)}
-        addLinhas(c,x.ln);ch=true}
-    });
-    if(ch){sv();ap()}
+    autoAgenda();autoBolha();
   }
 
-  /* ---------- renderizador do dia ---------- */
-  function chip(l){return '<span class="v293-ln"><span class="v293-lc" style="background:'+esc(corDe(l))+'"><span>'+esc(l.nome)+'</span></span></span>'}
-  function secao(it,tr,co){
-    var ex=it.pontosExtra||{},P=window.v277Percurso(it,tr),o=ex[tr.id+'|o']||{},d=ex[tr.id+'|d']||{},c0=(tr.conducoes||[])[0]||{};
-    var all=[];(tr.conducoes||[]).forEach(function(c){(c.linhas||[]).forEach(function(l){all.push(l)})});
-    var pts=P.pts.map(function(p){return p.nome}),wp=pts.slice(1,-1).filter(Boolean).join('|');
-    var m=c0.transporte==='Carro'?'driving':c0.transporte==='A pé'?'walking':'transit';
-    var url='https://www.google.com/maps/dir/?api=1&origin='+encodeURIComponent(pts[0]||'')+'&destination='+encodeURIComponent(pts[pts.length-1]||'')+(wp?'&waypoints='+encodeURIComponent(wp):'')+'&travelmode='+m;
-    var tit=(o.hora||d.hora)?esc(o.hora||'')+' – '+esc(d.hora||''):esc(P.pts[0].nome||'?')+' ➔ '+esc(P.pts[P.pts.length-1].nome||'?');
-    var h='<div class="v293-sh"><button data-a="ed" data-i="'+esc(it.id)+'" data-t="'+esc(tr.id)+'" style="display:none"></button><div class="v293-th"><div class="tt">'+tit+'</div><a class="v293-bt" href="'+esc(url)+'" target="_blank" rel="noopener">🗺️</a></div>'+
-      (all.length?'<div><span class="v295-ti">🚆</span>'+all.map(chip).join('')+'</div>':'')+'<div class="v293-sub"></div>';
-    P.pts.forEach(function(pt,j){
-      var key=tr.id+'|'+(pt.k==='p'&&pt.p?pt.p.id:pt.k),x=ex[key]||{},last=j===P.pts.length-1;
-      var txt=pt.k==='o'?tr.textoSaida:pt.k==='d'?tr.textoChegada:(pt.p&&pt.p.texto);
-      h+='<div class="v293-r"><div class="h">'+esc(x.hora||'')+'</div><div class="n"><i'+(last?' class="e"':'')+'></i></div><div class="c"><b>'+esc(pt.nome||'—')+'</b>'+(x.link?'<a href="'+esc(x.link)+'" target="_blank" rel="noopener">🔗</a>':'')+zPt(it,pt.nome)+(txt?'<small>'+esc(txt)+'</small>':'')+'</div></div>';
-      if(j<P.legs.length)P.legs[j].forEach(function(l){var c=l.c;
-        h+='<div class="v293-r v293-lg"><div></div><div class="b"><u style="background:'+(c.transporte==='A pé'?'repeating-linear-gradient(#3b82f6 0 5px,transparent 5px 10px)':esc(co))+'"></u></div><div class="c">'+(ICO[c.transporte]||'🚌')+' <b>'+esc(c.transporte)+'</b> '+(c.linhas||[]).map(chip).join('')+(c.valor?' · '+esc(c.valor)+' '+esc(c.moeda):'')+(c.notas?'<small>'+esc(c.notas)+'</small>':'')+'</div></div>'});
-    });
-    return h+'</div>';
+  /* ---------- Agenda: abre direto no dia que tem rota ---------- */
+  function autoAgenda(){
+    var ag=$('v294-ag'),dd=$('v294-dd');if(!ag||!dd||dd.children.length)return;
+    var com=[].filter.call(ag.querySelectorAll('.v294-d'),function(c){return c.querySelector('u s')});
+    if(!com.length)return;
+    var h=hoje(),p=com.filter(function(c){return c.dataset.d===h})[0]||com.filter(function(c){return c.dataset.d>=h})[0]||com[0];
+    if(p)p.click();
   }
-  window.v293Card=function(it){
-    if(!it||!window.v277Percurso)return '';
-    var co=(typeof obterCorPorCategoria==='function'&&obterCorPorCategoria(it.categoria))||it.cor||'#6366f1';
-    return '<div class="v293-card" style="border:3px solid '+esc(co)+';background:color-mix(in srgb,'+esc(co)+' 14%,white)"><div class="v293-ch"><span class="bd" style="background:'+esc(co)+'">'+esc(it.categoria)+'</span><span class="dt">📅 '+fmt(it.dataInicio)+' ➔ '+fmt(it.dataFim||it.dataInicio)+'</span></div>'+zBlock(it,false)+
-      (it.trechos||[]).filter(function(t){return t.origem||t.destino}).map(function(t){return secao(it,t,co)}).join('')+'</div>';
-  };
-
-  /* ---------- calendário flutuante: abre no meio da tela ---------- */
-  var MES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-  var cal={y:n0.getFullYear(),m:n0.getMonth(),sel:null};
-  function blocos(d){return (dadosApp.itinerario||[]).filter(function(b){var a=b.dataInicio,z=b.dataFim||a;return a&&a<=d&&d<=z&&(b.trechos||[]).some(function(t){return t.origem||t.destino})})}
-  function primeira(){var ds=(dadosApp.itinerario||[]).filter(function(b){return (b.trechos||[]).some(function(t){return t.origem||t.destino})}).map(function(b){return b.dataInicio}).filter(Boolean).sort();return ds[0]||null}
-  function irPara(d){var p=d.split('-');cal.y=+p[0];cal.m=+p[1]-1;cal.sel=d}
-  function calDraw(rolar){
-    var m=$('v296-md');if(!m)return;
-    var first=new Date(cal.y,cal.m,1).getDay(),n=new Date(cal.y,cal.m+1,0).getDate();
-    var h='<div class="bx"><div class="v294-nav"><button class="v294-b" data-a="p">◀</button><select data-a="mes">'+MES.map(function(x,i){return '<option value="'+i+'"'+(i===cal.m?' selected':'')+'>'+x+'</option>'}).join('')+'</select><input type="number" data-a="ano" value="'+cal.y+'"><span class="sp"></span><button class="v294-b" data-a="n">▶</button><button class="v294-b" data-a="x">✕</button></div>'+
-      '<div class="v294-nav"><button class="v294-b" data-a="v">✈️ Início da viagem</button><button class="v294-b" data-a="h">Hoje</button></div><div class="v294-g">'+['D','S','T','Q','Q','S','S'].map(function(x){return '<i>'+x+'</i>'}).join('');
-    for(var i=0;i<first;i++)h+='<span></span>';
-    for(var d=1;d<=n;d++){var k=cal.y+'-'+pad(cal.m+1)+'-'+pad(d),bs=blocos(k);
-      h+='<button class="v294-d'+(k===HOJE?' h':'')+(k===cal.sel?' s':'')+'" data-d="'+k+'"><span>'+d+'</span><u>'+bs.slice(0,3).map(function(b){return '<s style="background:'+esc((typeof obterCorPorCategoria==='function'&&obterCorPorCategoria(b.categoria))||'#6366f1')+'"></s>'}).join('')+'</u></button>'}
-    h+='</div><div id="v296-dd">';
-    if(cal.sel){var bs2=blocos(cal.sel);h+='<div class="dh">📅 '+fmt(cal.sel)+'</div><div class="cds">'+(bs2.length?bs2.map(function(b){return window.v293Card(b)}).join(''):'<div class="nd">Nada neste dia.</div>')+'</div>'}
-    h+='</div></div>';
-    m.innerHTML=h;
-    if(rolar){var dd=$('v296-dd');if(dd)dd.scrollIntoView({behavior:'smooth',block:'start'})}
-  }
-  function calOpen(){
-    var m=$('v296-md');
-    if(!m){
-      m=document.createElement('div');m.id='v296-md';document.body.appendChild(m);
-      m.addEventListener('click',function(e){
-        if(e.target===m){m.style.display='none';return}
-        var b=e.target.closest('button');if(!b)return;var k=b.dataset;
-        if(k.a==='x'){m.style.display='none';return}
-        if(k.a==='p'){if(--cal.m<0){cal.m=11;cal.y--}calDraw();return}
-        if(k.a==='n'){if(++cal.m>11){cal.m=0;cal.y++}calDraw();return}
-        if(k.a==='h'){irPara(HOJE);calDraw(true);return}
-        if(k.a==='v'){var f=primeira();if(f){irPara(f);calDraw(true)}else T('Nenhuma rota com data ainda.','info');return}
-        if(k.d){cal.sel=k.d;calDraw(true)}});
-      m.addEventListener('change',function(e){var t=e.target;
-        if(t.dataset.a==='mes'){cal.m=+t.value;calDraw()}
-        else if(t.dataset.a==='ano'&&+t.value>1900){cal.y=+t.value;calDraw()}});
-    }
-    if(!cal.sel){irPara(primeira()||HOJE)}
-    calDraw();m.style.display='flex';
-  }
-  function bolha(){
-    var b=$('v294-bl');if(!b||b.dataset.v296)return;b.dataset.v296=1;
-    ['pointerdown','pointermove','pointerup'].forEach(function(n){b.addEventListener(n,function(e){e.stopImmediatePropagation()},true)});
-    b.addEventListener('click',calOpen);
+  /* ---------- bolinha 📅: se hoje não tem nada, pula para o dia certo ---------- */
+  var jumpUntil=0;
+  document.addEventListener('pointerup',function(e){if(e.target.closest&&e.target.closest('#v294-bl'))jumpUntil=Date.now()+2500},true);
+  function autoBolha(){
+    var md=$('v294-md');if(!md||md.style.display!=='flex'||Date.now()>jumpUntil)return;
+    var bd=$('v294-bd');if(!bd||bd.querySelector('.v295-card'))return;
+    var inp=md.querySelector('input[type=date]'),t=alvoData();
+    jumpUntil=0;
+    if(inp&&t&&inp.value!==t){inp.value=t;inp.dispatchEvent(new Event('change',{bubbles:true}))}
   }
 
-  /* ---------- ligações ---------- */
-  function init(){
-    var lista=$('v293-lista'),mk=$('v293-mk');if(!lista||!mk||lista.dataset.v296)return;
-    lista.dataset.v296=1;
-    new MutationObserver(function(){setTimeout(decor,80)}).observe(lista,{childList:true});
-    new MutationObserver(function(){setTimeout(pv,0)}).observe(mk,{childList:true});
-    lista.addEventListener('click',function(e){
-      if(swClick(e,function(b){var f=b.closest('.v295-fm');if(f)fillPv(f.querySelector('.pvw'),f.querySelector('.ln').value)}))return;
-      var ch=e.target.closest('.v293-lc');if(ch&&!ch.closest('.v296-pv')){popup(ch.dataset.n,ch.dataset);return}
-      var b=e.target.closest('[data-q]');if(!b)return;var q=b.dataset.q;
-      if(q==='al')abreForm(b);
-      else if(q==='ok')salvaForm(b.closest('.v295-fm'));
-      else if(q==='no'||q==='zno')b.closest('.v295-fm').remove();
-      else if(q==='zadd')abreZ(b);
-      else if(q==='zok'){var f=b.closest('.v296-zf'),it=item(f.dataset.ii),zn=f.querySelector('.zn').value.trim();
-        if(!it||!zn){T('Digite a zona.','erro');return}undo();addZona(it,f.querySelector('.zl').value.trim()||it.categoria,zn);sv();ap();T('Zona adicionada!','sucesso')}
-      else if(q==='zx'){var it2=item(b.dataset.ii);if(!it2)return;undo();it2.zonasLista=(it2.zonasLista||[]).filter(function(z){return z.id!==b.dataset.zid});sv();ap()}
-    });
-    lista.addEventListener('input',function(e){if(e.target.classList.contains('ln')){var f=e.target.closest('.v295-fm');fillPv(f.querySelector('.pvw'),e.target.value)}});
-    lista.addEventListener('change',function(e){var n=e.target.dataset&&e.target.dataset.swc;
-      if(n){setLite(n,e.target.value);var f=e.target.closest('.v295-fm');if(f)fillPv(f.querySelector('.pvw'),f.querySelector('.ln').value)}});
+  /* Na Agenda, abrir/fechar uma caixinha do card dentro dela não atualizava (a Agenda se redesenhava antes). Corrige. */
+  var inAg=false;
+  document.addEventListener('click',function(e){inAg=!!(e.target.closest&&e.target.closest('#v294-ag .v295-card'))},true);
+  document.addEventListener('click',function(e){
+    if(!inAg)return;inAg=false;
+    var x=e.target.closest&&e.target.closest('[data-a]');
+    if(x&&(x.dataset.a==='op'||x.dataset.a==='tg'))setTimeout(ap,0);
+  });
 
-    mk.addEventListener('click',function(e){
-      if(swClick(e,function(b){var s=b.closest('.v296-sx');if(s)fillPv(s.querySelector('.pvs'),s.querySelector('.sln').value);else pv()}))return;
-      var ch=e.target.closest('.v293-lc');if(ch&&!ch.closest('.v296-pv')&&!ch.closest('.v296-sx'))popup(ch.dataset.n,{})});
-    mk.addEventListener('input',function(e){
-      if(e.target.id==='v293-ln')pv();
-      else if(e.target.classList.contains('sln'))fillPv(e.target.closest('.v296-sx').querySelector('.pvs'),e.target.value)});
-    mk.addEventListener('change',function(e){var n=e.target.dataset&&e.target.dataset.swc;
-      if(n){setLite(n,e.target.value);var s=e.target.closest('.v296-sx');if(s)fillPv(s.querySelector('.pvs'),s.querySelector('.sln').value);else pv()}});
-    /* antes de salvar, guarda o que foi digitado nas paradas e na zona; depois aplica */
-    mk.addEventListener('click',function(e){
-      if(!e.target.closest('[data-a="s"]'))return;
-      var v=function(i){var x=$(i);return x?x.value.trim():''},de=v('v293-de');if(!de)return;
-      var f=(typeof destinoFiltro!=='undefined'&&destinoFiltro!=='todos')?destinoFiltro:'';
-      var s={ci:v('v293-ci')||f||de,or:v('v293-or'),de:de,zn:v('v296-zn'),
-        mode:((mk.querySelector('.v293-md button.on')||{}).dataset||{}).m||'Trem',
-        st:[].map.call(mk.querySelectorAll('#v293-ps .r'),function(r){var g=function(c){var x=r.querySelector(c);return x?x.value.trim():''};
-          return {n:g('.par'),ln:g('.sln'),zn:g('.szn'),cm:g('.scm')}}).filter(function(x){return x.n})};
-      setTimeout(function(){aplica(s)},350);
-    },true);
-    decor();pv();
-  }
-  [600,1500,2800,4500,7000].forEach(function(ms){setTimeout(function(){init();bolha()},ms)});
+  var tm=null;
+  function agenda(){clearTimeout(tm);tm=setTimeout(decorar,120)}
+  new MutationObserver(agenda).observe(document.body,{childList:true,subtree:true});
+  setInterval(function(){var h=hoje();if(h!==h0){h0=h}decorar()},60000);
+  [300,1000,2200,4000].forEach(function(ms){setTimeout(decorar,ms)});
 })();
 </script>
 <!--/V296-->
