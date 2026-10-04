@@ -10270,5 +10270,182 @@ body.v287-typing #v300-tabs,body.v287-typing #v300-handle{display:none!important
 })();
 </script>
 <!--/V300-->
+<!--V301-->
+<style>
+.v301-bar{flex-basis:100%;width:100%;display:flex;gap:6px;align-items:center;margin-top:4px}
+.v301-bar .sp{flex:1}
+.v301-p,.v301-pr{width:34px;height:34px;border-radius:50%;border:2px solid #e2e8f0;background:#fff;font-size:18px;padding:0;display:inline-flex;align-items:center;justify-content:center;opacity:.55}
+.v301-p.on{opacity:1;border-color:#6366f1;background:#eef2ff;box-shadow:0 0 0 3px rgba(99,102,241,.2)}
+.v301-pr{border-radius:10px;border-color:#c7d2fe;background:#eef2ff;opacity:1;font-size:16px}
+.v301-p:active,.v301-pr:active{transform:scale(.92)}
+#v301-pf,#v301-fa{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+#v301-pf button,#v301-fa button{padding:8px 12px;border-radius:999px;border:1px solid #c7d2fe;background:#fff;color:#3730a3;font-weight:800;font-size:13px}
+#v301-pf button.on{background:linear-gradient(135deg,#6366f1,#7c3aed);color:#fff;border:0}
+#v301-fa button{flex:1;border-radius:12px}
+.v301-pdf{padding:6px 10px;border-radius:12px;border:0;background:#4f46e5;color:#fff;font-weight:800;font-size:12px}
+.v295-ch .v301-pr,.v295-th .v301-pr{flex:none;width:32px;height:32px}
+</style>
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i)};
+  function T(m,t){if(window.mostrarToast)mostrarToast(m,t||'info')}
+  function sv(){try{salvarStorage()}catch(e){}}
+  var PES=[['Mariana','👩'],['Sofia','👧'],['Glória','👵']];
+  var MAP={voos:'voos',contatos:'contatos',tarefas:'tarefas',checklist:'checklist',vouchers:'vouchers',chat:'chat'};
+  var RX=/apagar(?:Voo|Contato|Tarefa|ItemChecklist|Voucher|Chat)\((\d+)\)/;
+  var filtro=localStorage.getItem('v301_pf')||'todas';
+
+  /* ---------- 1. PDFs só neste aparelho (IndexedDB), nunca vão para o Supabase ---------- */
+  var dbp=null;
+  function dbo(){if(dbp)return dbp;dbp=new Promise(function(res,rej){var r=indexedDB.open('v301_files',1);r.onupgradeneeded=function(){r.result.createObjectStore('f')};r.onsuccess=function(){res(r.result)};r.onerror=function(){rej(r.error)}});return dbp}
+  function idb(mode,fn){return dbo().then(function(d){return new Promise(function(res,rej){var t=d.transaction('f',mode),q=fn(t.objectStore('f'));t.oncomplete=function(){res(q&&q.result)};t.onerror=function(){rej(t.error)}})})}
+  function lerArq(file){return new Promise(function(res,rej){var r=new FileReader();r.onload=function(){res(r.result)};r.onerror=rej;r.readAsDataURL(file)})}
+  function achar(arr,id){return (dadosApp[arr]||[]).filter(function(x){return x.id===id})[0]}
+
+  function anexar(arr,pre,id,ev,titulo){
+    var f=ev.target.files[0];if(!f)return;
+    lerArq(f).then(function(u){return idb('readwrite',function(s){return s.put(u,pre+id)}).then(function(){return u})})
+    .then(function(u){
+      try{registarEstadoAnterior()}catch(e){}
+      var it=achar(arr,id);if(!it)return;
+      it.pdfLocal=true;it.pdfNome=f.name;it.pdfData='';sv();renderizarHubUtilidades();
+      abrirLeitorArquivo(u,titulo(it));T('Arquivo salvo SÓ neste aparelho.','sucesso');
+    }).catch(function(){T('Não consegui salvar o arquivo.','erro')});
+  }
+  window.anexarPdfVoo=function(id,ev){anexar('voos','voo|',id,ev,function(v){return 'Passagem '+(v.voo||'Voo')})};
+  window.anexarPdfVoucher=function(id,ev){anexar('vouchers','vou|',id,ev,function(v){return v.titulo||'Voucher'})};
+  [['apagarVoo','voo|'],['apagarVoucher','vou|']].forEach(function(p){
+    var o=window[p[0]];window[p[0]]=function(id){o.apply(this,arguments);idb('readwrite',function(s){return s.delete(p[1]+id)}).catch(function(){})}});
+
+  /* arquivos que já estavam na nuvem: passam para o aparelho e saem dos dados */
+  function migrar(){
+    [['voos','voo|'],['vouchers','vou|']].forEach(function(p){
+      (dadosApp[p[0]]||[]).forEach(function(it){
+        if(typeof it.pdfData==='string'&&it.pdfData.indexOf('data:')===0){
+          var u=it.pdfData;
+          idb('readwrite',function(s){return s.put(u,p[1]+it.id)}).then(function(){it.pdfLocal=true;it.pdfData='';sv();try{renderizarHubUtilidades()}catch(e){}}).catch(function(){});
+        }
+      });
+    });
+  }
+  [2500,6000].forEach(function(ms){setTimeout(migrar,ms)});
+
+  /* ---------- 3. Imprimir um item ---------- */
+  function imprimir(titulo,node){
+    var c=node.cloneNode(true),o=node.querySelectorAll('input,select,textarea'),k=c.querySelectorAll('input,select,textarea');
+    [].forEach.call(k,function(el,i){
+      var src=o[i],s=document.createElement('span');
+      if(src&&src.type==='checkbox'){s.textContent=src.checked?'☑ ':'☐ '}
+      else if(src&&src.tagName==='SELECT'){s.textContent=src.options[src.selectedIndex]?src.options[src.selectedIndex].text:''}
+      else if(src&&src.type==='file'){s.textContent=''}
+      else s.textContent=src?src.value:'';
+      s.style.fontWeight='700';el.replaceWith(s);
+    });
+    [].forEach.call(c.querySelectorAll('button,label,.v301-bar,.v295-pn,.v295-cr,.v298-mv,.v295-cv,details>summary'),function(e){e.remove()});
+    var w=window.open('','_blank');if(!w){T('Libere pop-ups para imprimir.','erro');return}
+    w.document.write('<html><head><meta charset="utf-8"><title>'+titulo+'</title><style>body{font-family:system-ui,sans-serif;padding:20px;color:#0f172a;font-size:14px}h1{font-size:18px}a{color:#0f172a;text-decoration:none}div{margin:3px 0}</style></head><body><h1>'+titulo+' - Roteiro Europa Mariana</h1>'+c.innerHTML+'<script>setTimeout(function(){window.print();window.close()},400)<\/script></body></html>');
+    w.document.close();
+  }
+
+  /* ---------- 2 + 3. Hub: Mariana / Sofia / Glória + impressora em cada item ---------- */
+  function hubFiltro(){
+    var g=$('hub-utilidades-grid');if(!g||$('v301-pf'))return;
+    var d=document.createElement('div');d.id='v301-pf';g.insertAdjacentElement('beforebegin',d);
+    d.addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;
+      filtro=b.dataset.p;localStorage.setItem('v301_pf',filtro);pintaFiltro();decorHub()});
+    pintaFiltro();
+  }
+  function pintaFiltro(){
+    var d=$('v301-pf');if(!d)return;
+    d.innerHTML='<button type="button" data-p="todas" class="'+(filtro==='todas'?'on':'')+'">Todos</button>'+
+      PES.map(function(p){return '<button type="button" data-p="'+p[0]+'" class="'+(filtro===p[0]?'on':'')+'">'+p[1]+' '+p[0]+'</button>'}).join('');
+  }
+  function decorHub(){
+    var g=$('hub-utilidades-grid');if(!g)return;hubFiltro();
+    [].forEach.call(g.children,function(card){
+      var tipo=(card.id||'').replace('card-','');if(!MAP[tipo])return;
+      var box=card.lastElementChild;if(!box)return;
+      [].forEach.call(box.children,function(row){
+        var m=row.innerHTML.match(RX);if(!m)return;
+        var id=+m[1],it=achar(MAP[tipo],id);if(!it)return;
+        if(!row.querySelector('.v301-bar')){
+          row.style.flexWrap='wrap';
+          var b=document.createElement('div');b.className='v301-bar';b.dataset.t=tipo;b.dataset.i=id;
+          b.innerHTML=PES.map(function(p){return '<button type="button" class="v301-p'+(it.pessoa===p[0]?' on':'')+'" data-p="'+p[0]+'" title="'+p[0]+'" aria-label="'+p[0]+'">'+p[1]+'</button>'}).join('')+
+            '<span class="sp"></span><button type="button" class="v301-pr" title="Imprimir este item" aria-label="Imprimir">🖨️</button>';
+          row.appendChild(b);
+        }
+        row.style.display=(filtro==='todas'||it.pessoa===filtro)?'':'none';
+        /* PDF guardado só no aparelho */
+        if((tipo==='voos'||tipo==='vouchers')&&it.pdfLocal&&!it.pdfData){
+          var lab=[].filter.call(row.querySelectorAll('label'),function(l){return l.querySelector('input[type=file]')})[0];
+          if(lab){
+            var bt=document.createElement('button');bt.type='button';bt.className='v301-pdf';bt.textContent='📄 PDF';bt.title='Salvo só neste aparelho';
+            bt.addEventListener('click',function(){
+              idb('readonly',function(s){return s.get((tipo==='voos'?'voo|':'vou|')+id)}).then(function(u){
+                if(u){abrirLeitorArquivo(u,tipo==='voos'?'Passagem '+(it.voo||'Voo'):(it.titulo||'Voucher'))}
+                else{it.pdfLocal=false;sv();renderizarHubUtilidades();T('Este arquivo não está neste aparelho. Anexe de novo.','info')}})});
+            lab.replaceWith(bt);
+          }
+        }
+      });
+    });
+  }
+  var orh=window.renderizarHubUtilidades;
+  window.renderizarHubUtilidades=function(){var r=orh.apply(this,arguments);try{decorHub()}catch(e){console.error('v301',e)}return r};
+
+  document.addEventListener('click',function(e){
+    var b=e.target.closest('.v301-bar');if(!b)return;
+    var x=e.target.closest('button');if(!x)return;
+    var row=b.parentElement,it=achar(MAP[b.dataset.t],+b.dataset.i);if(!it)return;
+    if(x.classList.contains('v301-pr')){
+      var nome=PES.filter(function(p){return p[0]===it.pessoa})[0];
+      imprimir((card=row.closest('[id^=card-]'))&&card.querySelector('h3')?card.querySelector('h3').textContent.trim():'Item',row);return}
+    if(x.dataset.p){
+      try{registarEstadoAnterior()}catch(z){}
+      it.pessoa=it.pessoa===x.dataset.p?'':x.dataset.p;sv();
+      [].forEach.call(b.querySelectorAll('.v301-p'),function(y){y.classList.toggle('on',y.dataset.p===it.pessoa)});
+      row.style.display=(filtro==='todas'||it.pessoa===filtro)?'':'none';
+    }
+  });
+  var card;
+
+  /* ---------- Roteiro: impressora em cada bloco e cada trecho + Fechar tudo / Abrir tudo ---------- */
+  function todos(fechar){
+    var ids=[].map.call(document.querySelectorAll('#v295-lista > .v295-card'),function(c){return c.dataset.i});
+    ids.forEach(function(id){
+      var c=document.querySelector('#v295-lista > .v295-card[data-i="'+id+'"]');if(!c)return;
+      var cv=c.querySelector('.v295-ch .v295-cv'),ch=c.querySelector('.v295-ch');if(!cv||!ch)return;
+      var aberto=cv.textContent.trim()==='▾';
+      if(fechar===aberto)ch.click();
+    });
+  }
+  function decorRot(){
+    var lista=$('v295-lista');
+    if(lista&&!$('v301-fa')){
+      var d=document.createElement('div');d.id='v301-fa';
+      d.innerHTML='<button type="button" data-f="1">⏫ Fechar tudo</button><button type="button" data-f="0">⏬ Abrir tudo</button>';
+      lista.insertAdjacentElement('beforebegin',d);
+      d.addEventListener('click',function(e){var b=e.target.closest('button');if(b)todos(b.dataset.f==='1')});
+    }
+    [].forEach.call(document.querySelectorAll('.v295-ch'),function(ch){
+      if(ch.querySelector('.v301-pr'))return;
+      var b=document.createElement('button');b.type='button';b.className='v301-pr';b.textContent='🖨️';b.title='Imprimir este bloco';b.setAttribute('aria-label','Imprimir bloco');
+      b.addEventListener('click',function(e){e.stopPropagation();var c=ch.closest('.v295-card');if(c&&typeof imprimirBlocoUnico==='function')imprimirBlocoUnico(c.dataset.i)});
+      ch.appendChild(b);
+    });
+    [].forEach.call(document.querySelectorAll('.v295-th'),function(th){
+      if(th.querySelector('.v301-pr'))return;
+      var b=document.createElement('button');b.type='button';b.className='v301-pr';b.textContent='🖨️';b.title='Imprimir esta rota';b.setAttribute('aria-label','Imprimir rota');
+      b.addEventListener('click',function(e){e.stopPropagation();var sh=th.closest('.v295-sh');if(sh)imprimir('Rota',sh)});
+      th.appendChild(b);
+    });
+  }
+  var t=null;
+  new MutationObserver(function(){clearTimeout(t);t=setTimeout(decorRot,150)}).observe(document.body,{childList:true,subtree:true});
+  [800,2000,4000].forEach(function(ms){setTimeout(function(){decorRot();try{decorHub()}catch(e){}},ms)});
+})();
+</script>
+<!--/V301-->
 </body>
 </html>
