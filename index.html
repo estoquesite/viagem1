@@ -10519,8 +10519,9 @@ label.v301-pr{cursor:pointer}
     }
     return h+'</div>';
   }
-  async function htmlBloco(it){
-    var h='<div class="bl"><h1>'+esc(it.categoria)+' <small>📅 '+fm(it.dataInicio)+' ➔ '+fm(it.dataFim||it.dataInicio)+'</small></h1>';
+  async function htmlBloco(it,semCapa){
+    var ts0=(it.trechos||[]).filter(function(t){return t.origem||t.destino});
+    var h='<div class="bl">'+(semCapa?'':'<div class="capa"><h1 class="big">'+esc(it.categoria)+'</h1><div class="dt">📅 '+fm(it.dataInicio)+' ➔ '+fm(it.dataFim||it.dataInicio)+'</div>'+ts0.map(function(t){return '<div class="rt">'+esc(t.origem||'?')+' ➔ '+esc(t.destino||'?')+'</div>'}).join('')+'</div>')+'<h1>'+esc(it.categoria)+' <small>📅 '+fm(it.dataInicio)+' ➔ '+fm(it.dataFim||it.dataInicio)+'</small></h1>';
     var zs=(it.zonasLista||[]).map(function(z){return esc(z.local+' · '+z.zona)}).join(', ');if(zs)h+='<div>🎫 '+zs+'</div>';
     var ts=(it.trechos||[]).filter(function(t){return t.origem||t.destino});
     for(var i=0;i<ts.length;i++)h+=await htmlTrecho(it,ts[i]);
@@ -10533,10 +10534,11 @@ label.v301-pr{cursor:pointer}
     try{
       var corpo=await gerar();
       w.document.open();
-      w.document.write('<html><head><meta charset="utf-8"><title>'+esc(titulo)+'</title><style>body{font-family:system-ui,sans-serif;color:#0f172a;padding:16px;font-size:14px}h1{font-size:20px;margin:0 0 6px}h2{font-size:16px;margin:12px 0 6px}small{font-weight:600;color:#475569;font-size:13px}.tr{border:1px solid #cbd5e1;border-radius:12px;padding:10px;margin:10px 0;page-break-inside:avoid}.pt{margin:6px 0}.lg{margin:4px 0 4px 14px;padding-left:10px;border-left:3px dashed #6366f1;color:#334155}.ch{background:#e2231a;color:#fff;border-radius:3px;padding:0 6px;font-weight:800;font-size:12px}.lk{color:#475569;font-size:11px;word-break:break-all}.im img{max-width:100%;max-height:520px;border:1px solid #cbd5e1;border-radius:8px;margin:6px 6px 0 0}</style></head><body>'+corpo+'<script>setTimeout(function(){window.print()},700)<\/script></body></html>');
+      w.document.write('<html><head><meta charset="utf-8"><title>'+esc(titulo)+'</title><style>body{font-family:system-ui,sans-serif;color:#0f172a;padding:16px;font-size:14px}h1{font-size:20px;margin:0 0 6px}h2{font-size:16px;margin:12px 0 6px}small{font-weight:600;color:#475569;font-size:13px}.tr{border:1px solid #cbd5e1;border-radius:12px;padding:10px;margin:10px 0;page-break-inside:avoid}.pt{margin:6px 0}.lg{margin:4px 0 4px 14px;padding-left:10px;border-left:3px dashed #6366f1;color:#334155}.ch{background:#e2231a;color:#fff;border-radius:3px;padding:0 6px;font-weight:800;font-size:12px}.lk{color:#475569;font-size:11px;word-break:break-all}.capa{min-height:88vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;page-break-after:always}.big{font-size:42px}.dt{font-size:20px;font-weight:700;margin:8px 0}.rt{font-size:15px;color:#475569;margin:2px 0}.im img{max-width:100%;max-height:520px;border:1px solid #cbd5e1;border-radius:8px;margin:6px 6px 0 0}</style></head><body>'+corpo+'<script>setTimeout(function(){window.print()},700)<\/script></body></html>');
       w.document.close();
     }catch(e){console.error(e);w.close();T('Erro ao montar a impressão.','erro')}
   }
+  window.v302={av:av,htmlBloco:htmlBloco,htmlTrecho:htmlTrecho,imprimirAberto:imprimirAberto};
   /* captura os botões 🖨️ do Roteiro antes dos antigos */
   document.addEventListener('click',function(e){
     var b=e.target.closest&&e.target.closest('.v295-ch .v301-pr, .v295-th .v301-pr');if(!b)return;
