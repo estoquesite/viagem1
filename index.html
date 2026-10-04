@@ -9705,5 +9705,188 @@ body.v287-typing #v297-cal{display:none!important}
 })();
 </script>
 <!--/V297-->
+<!--V298-->
+<!-- CAMADA v298: (1) tira Saída/Chegada com hora do "Digitar nova rota",
+     (2) datas começam em dezembro de 2026, a 2ª copia a 1ª sozinha e as duas piscam até você preencher,
+     (3) "Destino do card" mostra os destinos já cadastrados lá em cima e pisca em outra cor,
+     (4) setas ⬆️⬇️ em cada card da lista para realocar a ordem (lembra a ordem e sincroniza).
+     Cole logo ANTES de </body>, depois da v297. Não precisa remover nada. -->
+<style>
+/* ---------- piscar ---------- */
+@keyframes v298a{0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,.9);background-color:#fffbeb}50%{box-shadow:0 0 0 7px rgba(245,158,11,0);background-color:#fff}}
+@keyframes v298b{0%,100%{box-shadow:0 0 0 0 rgba(20,184,166,.9);background-color:#f0fdfa}50%{box-shadow:0 0 0 7px rgba(20,184,166,0);background-color:#fff}}
+#v293-mk input.v298-pd{border:2px solid #f59e0b!important;animation:v298a 1s ease-in-out infinite}
+#v293-mk input.v298-pc{border:2px solid #14b8a6!important;animation:v298b 1s ease-in-out infinite}
+#v298-chips.v298-pc{border-radius:14px;animation:v298b 1s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){#v293-mk input.v298-pd,#v293-mk input.v298-pc,#v298-chips.v298-pc{animation:none}}
+
+/* ---------- destinos cadastrados (os mesmos de cima) ---------- */
+#v298-chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px;padding:4px}
+#v298-chips .lb{font-size:11px;font-weight:800;color:#0f766e;flex:1 1 100%}
+#v298-chips button{padding:7px 12px;border-radius:999px;border:2px solid transparent;color:#fff;font-weight:800;font-size:12px;text-shadow:0 1px 0 rgba(0,0,0,.2)}
+#v298-chips button.on{border-color:#0f172a;box-shadow:0 0 0 2px #fff inset}
+
+/* ---------- setas de realocar no cabeçalho do card ---------- */
+.v298-mv{display:inline-flex;gap:4px;flex:none;order:7}
+.v298-mv button{width:32px;height:32px;border-radius:10px;border:1px solid #c7d2fe;background:#eef2ff;color:#3730a3;font-size:14px;padding:0;display:inline-flex;align-items:center;justify-content:center}
+.v298-mv button:active{background:#c7d2fe;transform:scale(.92)}
+.v295-ch .v296-hb{order:6}
+.v295-ch .v296-x{order:8}
+</style>
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i)};
+  function T(m,t){if(window.mostrarToast)mostrarToast(m,t||'info')}
+  function pad(n){return n<10?'0'+n:''+n}
+  var n0=new Date(),HOJE=n0.getFullYear()+'-'+pad(n0.getMonth()+1)+'-'+pad(n0.getDate());
+  var INICIO='2026-12-01'; /* mês em que as datas abrem. Mude aqui se quiser outro. */
+  function sv(){try{salvarStorage()}catch(e){}}
+  function undo(){try{registarEstadoAnterior()}catch(e){}}
+  function item(id){return (dadosApp.itinerario||[]).filter(function(i){return String(i.id)===String(id)})[0]}
+
+  /* =====================================================
+     1 a 3. FORMULÁRIO "DIGITAR NOVA ROTA"
+     ===================================================== */
+  function preparar(){
+    var box=$('v293-mk');if(!box)return;
+    var d1=$('v293-d1'),d2=$('v293-d2'),ci=$('v293-ci'),h1=$('v293-h1'),h2=$('v293-h2');
+    if(!d1||!d2)return;
+
+    /* sem Saída/Chegada com hora (os campos ficam só escondidos, para o resto continuar funcionando) */
+    if(h1&&h1.parentElement)h1.parentElement.style.display='none';
+
+    var t=box.querySelector('.hd .t'),editando=!!(t&&/Editando/.test(t.textContent));
+    var novo=!editando&&d1.value===HOJE;
+
+    if(novo&&!d1.dataset.v298){
+      d1.dataset.v298='1';
+      d1.value=INICIO;d2.value=INICIO;       /* abre em dezembro de 2026 */
+      d1.classList.add('v298-pd');d2.classList.add('v298-pd');
+    }
+
+    /* destino do card: chips com os destinos já cadastrados */
+    if(ci&&!$('v298-chips')){
+      var lista=(dadosApp.destinosCadastrados||[]).slice();
+      var cx=document.createElement('div');cx.id='v298-chips';
+      cx.innerHTML='<div class="lb">👆 Toque no destino já cadastrado (ou digite um novo acima)</div>'+
+        lista.map(function(n){
+          var c=(typeof obterCorPorCategoria==='function'&&obterCorPorCategoria(n))||'#6366f1';
+          return '<button type="button" data-d="'+String(n).replace(/"/g,'&quot;')+'" style="background:'+c+'">'+String(n).replace(/</g,'&lt;')+'</button>'}).join('');
+      var alvo=ci.closest('.f')||ci.parentElement;alvo.insertAdjacentElement('afterend',cx);
+      marcar();
+    }
+    if(ci&&!ci.value.trim()){ci.classList.add('v298-pc');var cx2=$('v298-chips');if(cx2)cx2.classList.add('v298-pc')}
+  }
+  function marcar(){
+    var ci=$('v293-ci'),cx=$('v298-chips');if(!ci||!cx)return;
+    var v=ci.value.trim().toLowerCase();
+    [].forEach.call(cx.querySelectorAll('button'),function(b){b.classList.toggle('on',b.dataset.d.toLowerCase()===v)});
+  }
+  function paraDePiscar(el){if(el)el.classList.remove('v298-pd','v298-pc')}
+  function ciOk(){paraDePiscar($('v293-ci'));var cx=$('v298-chips');if(cx)cx.classList.remove('v298-pc')}
+
+  /* 2ª data copia a 1ª; piscar para quando a pessoa mexe */
+  document.addEventListener('change',function(e){
+    var t=e.target,d1=$('v293-d1'),d2=$('v293-d2');
+    if(!t||!d1||!d2)return;
+    if(t===d1&&t.value){
+      if(!d2.dataset.man||!d2.value||d2.value<t.value)d2.value=t.value;
+      paraDePiscar(d1);paraDePiscar(d2);
+    }else if(t===d2){
+      d2.dataset.man='1';paraDePiscar(d2);
+      if(d1.value&&d2.value&&d2.value<d1.value)d2.value=d1.value;
+    }
+  });
+  document.addEventListener('focusin',function(e){
+    var t=e.target;
+    if(t&&(t.id==='v293-d1'||t.id==='v293-d2'))paraDePiscar(t);
+    if(t&&t.id==='v293-ci')ciOk();
+  });
+  document.addEventListener('input',function(e){
+    var t=e.target;
+    if(t&&t.id==='v293-ci'){if(t.value.trim())ciOk();marcar()}
+  });
+  document.addEventListener('click',function(e){
+    var b=e.target.closest&&e.target.closest('#v298-chips button');if(!b)return;
+    var ci=$('v293-ci');if(!ci)return;
+    ci.value=b.dataset.d;ci.dispatchEvent(new Event('input',{bubbles:true}));ci.dispatchEvent(new Event('change',{bubbles:true}));
+    ciOk();marcar();
+  });
+
+  /* =====================================================
+     4. REALOCAR OS CARDS DA LISTA
+     ===================================================== */
+  var busy=false;
+  function cards(){var b=$('v295-lista');return b?[].slice.call(b.querySelectorAll(':scope > .v295-card')):[]}
+
+  function aplicarOrdem(){
+    var box=$('v295-lista'),ord=dadosApp.ordemCards;
+    if(!box||!Array.isArray(ord)||!ord.length)return;
+    var cs=cards();if(cs.length<2)return;
+    ord=ord.map(String);
+    var conhecidos=cs.filter(function(c){return ord.indexOf(String(c.dataset.i))>-1})
+      .sort(function(a,b){return ord.indexOf(String(a.dataset.i))-ord.indexOf(String(b.dataset.i))});
+    var res=conhecidos.slice();
+    /* card novo (ainda sem posição) entra logo depois do vizinho de cima na ordem original */
+    cs.forEach(function(c,p){
+      if(ord.indexOf(String(c.dataset.i))>-1)return;
+      var ant=cs[p-1],pos=ant?res.indexOf(ant):-1;
+      res.splice(pos+1,0,c);
+    });
+    if(res.every(function(c,k){return c===cs[k]}))return;
+    busy=true;res.forEach(function(c){box.appendChild(c)});
+    setTimeout(function(){busy=false},0);
+  }
+
+  function mover(id,dir){
+    var cs=cards(),ids=cs.map(function(c){return String(c.dataset.i)});
+    var i=ids.indexOf(String(id)),j=i+dir;
+    if(i<0)return;
+    if(j<0||j>=ids.length){T(dir<0?'Já é o primeiro card.':'Já é o último card.');return}
+    undo();
+    var full=(dadosApp.ordemCards||[]).map(String).filter(function(x){return !!item(x)});
+    if(typeof destinoFiltro==='undefined'||destinoFiltro==='todos'){
+      full=ids.concat(full.filter(function(x){return ids.indexOf(x)<0}));
+    }else{
+      ids.forEach(function(x){if(full.indexOf(x)<0)full.push(x)});
+    }
+    var a=full.indexOf(ids[i]),b=full.indexOf(ids[j]);
+    var tmp=full[a];full[a]=full[b];full[b]=tmp;
+    dadosApp.ordemCards=full;
+    sv();aplicarOrdem();decorar();
+    var el=cards().filter(function(c){return String(c.dataset.i)===String(id)})[0];
+    if(el)el.scrollIntoView({behavior:'smooth',block:'nearest'});
+  }
+
+  function decorar(){
+    cards().forEach(function(c){
+      var ch=c.querySelector('.v295-ch');if(!ch||ch.querySelector('.v298-mv'))return;
+      var w=document.createElement('span');w.className='v298-mv';
+      w.innerHTML='<button type="button" data-d="-1" aria-label="Subir este card" title="Subir">⬆️</button><button type="button" data-d="1" aria-label="Descer este card" title="Descer">⬇️</button>';
+      w.addEventListener('click',function(e){
+        e.stopPropagation();           /* não abre/fecha o card */
+        var b=e.target.closest('button');if(b)mover(c.dataset.i,+b.dataset.d);
+      });
+      ch.appendChild(w);
+    });
+  }
+
+  /* =====================================================
+     ligar tudo (espera os outros módulos criarem as caixas)
+     ===================================================== */
+  var ligado={mk:false,lista:false};
+  function ligar(){
+    var mk=$('v293-mk'),lista=$('v295-lista');
+    if(mk&&!ligado.mk){ligado.mk=true;new MutationObserver(function(){setTimeout(preparar,30)}).observe(mk,{childList:true})}
+    if(lista&&!ligado.lista){
+      ligado.lista=true;
+      new MutationObserver(function(){if(busy)return;setTimeout(function(){aplicarOrdem();decorar()},30)}).observe(lista,{childList:true});
+    }
+    preparar();aplicarOrdem();decorar();
+  }
+  [500,1400,2800,4500,7000,10000].forEach(function(ms){setTimeout(ligar,ms)});
+})();
+</script>
+<!--/V298-->
 </body>
 </html>
