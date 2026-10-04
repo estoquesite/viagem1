@@ -8815,5 +8815,161 @@ details.v289-detalhes[open] summary, details.v289-detalhes-rotr[open] summary {
 })();
 </script>
 <!--/V293-->
+<!--V294-->
+<style>
+#v292-ag{display:none!important}
+#v294-ag,#v294-dm{background:#fff;border-radius:22px;padding:10px;box-shadow:0 4px 16px rgba(99,102,241,.12);color:#0f172a;margin:8px 0}
+#v294-ag .hd{display:flex;align-items:center;gap:8px;font-weight:800;font-size:13px;cursor:pointer}#v294-ag .hd span:first-child{flex:1}
+.v294-nav{display:flex;align-items:center;gap:6px;margin:8px 0}.v294-nav select,.v294-nav input{padding:8px;border:1px solid #cbd5e1;border-radius:10px;font-weight:800;color:#0f172a;background:#fff}
+.v294-nav input{width:74px}.v294-nav .sp{flex:1}
+.v294-b{padding:8px 11px;border-radius:11px;border:1px solid #c7d2fe;background:#eef2ff;color:#3730a3;font-weight:800;font-size:12px}
+.v294-g{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}.v294-g i{text-align:center;font-size:10px;font-weight:800;color:#64748b;font-style:normal}
+.v294-d{min-height:40px;border-radius:10px;border:1px solid #e2e8f0;background:#fff;font-weight:800;font-size:13px;color:#0f172a;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:1px}
+.v294-d.h{border:2px solid #f59e0b}.v294-d.s{background:#e0e7ff;border-color:#6366f1}
+.v294-d u{display:flex;gap:2px;height:6px}.v294-d u s{width:6px;height:6px;border-radius:50%;display:block}
+@keyframes v294b{0%,100%{box-shadow:0 0 0 0 rgba(236,72,153,.9);background:#fce7f3}50%{box-shadow:0 0 0 8px rgba(236,72,153,0);background:#fff}}
+.v294-d.f{animation:v294b 1s ease-in-out infinite;border-color:#ec4899}
+.v294-now{animation:v294b 1s ease-in-out 8}
+@media (prefers-reduced-motion:reduce){.v294-d.f,.v294-now{animation:none}}
+#v294-dd{margin-top:8px;display:flex;flex-direction:column;gap:8px}
+#v294-dm .r{display:flex;gap:6px;margin-top:6px;align-items:center}
+#v294-dm input[type=text]{flex:1;min-width:0;padding:9px;border:1px solid #cbd5e1;border-radius:10px;font-size:14px;color:#0f172a;background:#fff}
+#v294-dm input[type=color]{width:42px;height:38px;padding:2px;border:1px solid #cbd5e1;border-radius:10px;background:#fff}
+.v294-im{margin-top:8px;padding-top:8px;border-top:1px dashed #cbd5e1}
+.v294-im .th{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.v294-im .th span{position:relative}.v294-im img{width:64px;height:64px;object-fit:cover;border-radius:10px;border:1px solid #cbd5e1}
+.v294-im .th b{position:absolute;top:-6px;right:-6px;background:#e11d48;color:#fff;border-radius:50%;width:18px;height:18px;font-size:10px;display:flex;align-items:center;justify-content:center}
+.v294-im .pz{margin-top:6px;padding:10px;border:1px dashed #6366f1;border-radius:10px;color:#64748b;background:#fff;min-height:36px}
+#v294-bl{position:fixed;right:10px;bottom:150px;width:42px;height:42px;border-radius:50%;border:0;background:linear-gradient(135deg,#6366f1,#ec4899);color:#fff;font-size:19px;z-index:75;box-shadow:0 4px 14px rgba(0,0,0,.3);opacity:.85;touch-action:none}
+#v294-md{position:fixed;inset:0;z-index:780;background:rgba(15,23,42,.85);display:flex;align-items:flex-end;justify-content:center}
+#v294-md>div{width:100%;max-width:560px;max-height:90vh;overflow-y:auto;background:#f4f3ff;border-radius:24px 24px 0 0;padding:12px 12px calc(20px + env(safe-area-inset-bottom,0px))}
+</style>
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i)};
+  function T(m,t){if(window.mostrarToast)mostrarToast(m,t||'info')}
+  function esc(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+  function sv(){try{salvarStorage()}catch(e){}}function ap(){try{atualizarTudo()}catch(e){}}
+  function undo(){try{registarEstadoAnterior()}catch(e){}}
+  function pad(n){return n<10?'0'+n:''+n}
+  var n0=new Date(),HOJE=n0.getFullYear()+'-'+pad(n0.getMonth()+1)+'-'+pad(n0.getDate());
+  var MES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  function blocos(d){return (dadosApp.itinerario||[]).filter(function(b){var a=b.dataInicio,z=b.dataFim||a;return a&&a<=d&&d<=z&&(b.trechos||[]).some(function(t){return t.origem||t.destino})})}
+
+  /* ---------- IMAGENS OFFLINE (neste aparelho) ---------- */
+  var dbp=null;
+  function dbo(){if(dbp)return dbp;dbp=new Promise(function(res,rej){var r=indexedDB.open('v294_img',1);r.onupgradeneeded=function(){r.result.createObjectStore('i')};r.onsuccess=function(){res(r.result)};r.onerror=function(){rej(r.error)}});return dbp}
+  function idb(mode,fn){return dbo().then(function(d){return new Promise(function(res,rej){var t=d.transaction('i',mode),q=fn(t.objectStore('i'));t.oncomplete=function(){res(q&&q.result)};t.onerror=function(){rej(t.error)}})})}
+  function thumbs(z,key,edit){idb('readonly',function(s){return s.get(key)}).then(function(l){l=l||[];var h=z.querySelector('.th');if(!h)return;
+    h.innerHTML=l.map(function(u,i){return '<span><img data-v="'+i+'" src="'+u+'" alt="Mapa">'+(edit?'<b data-x="'+i+'">✕</b>':'')+'</span>'}).join('');
+    if(!l.length&&!edit)z.style.display='none'}).catch(function(){})}
+  function addImg(key,blob,z){if(!blob)return;
+    (typeof comprimirImagem==='function'?comprimirImagem(blob,1200,.7):Promise.resolve(null)).then(function(u){if(!u)throw 0;
+      return idb('readonly',function(s){return s.get(key)}).then(function(l){l=l||[];l.push(u);return idb('readwrite',function(s){return s.put(l,key)})})})
+    .then(function(){T('Imagem salva neste aparelho (funciona offline)!','sucesso');thumbs(z,key,true)}).catch(function(){T('Não consegui salvar a imagem.','erro')})}
+  function prep(root,edit){
+    [].forEach.call(root.querySelectorAll('.v293-sh'),function(sh){
+      if(sh.dataset.v294)return;var b=sh.querySelector('button[data-t]');if(!b)return;sh.dataset.v294=1;
+      var key=b.dataset.i+'|'+b.dataset.t;
+      if(!edit)[].forEach.call(sh.querySelectorAll('button[data-a]'),function(x){x.remove()});
+      var z=document.createElement('div');z.className='v294-im';
+      z.innerHTML=(edit?'<div><button type="button" class="v294-b" data-p="1">📋 Colar print do mapa</button> <label class="v294-b" style="display:inline-block">📁 Escolher<input type="file" accept="image/*" hidden></label></div><div class="pz" contenteditable="true" hidden>Segure aqui e toque em Colar</div>':'')+'<div class="th"></div>';
+      sh.appendChild(z);thumbs(z,key,edit);
+      z.addEventListener('click',function(e){var im=e.target.closest('img'),x=e.target.closest('b[data-x]'),p=e.target.closest('[data-p]');
+        if(x){idb('readonly',function(s){return s.get(key)}).then(function(l){l=l||[];l.splice(+x.dataset.x,1);return idb('readwrite',function(s){return s.put(l,key)})}).then(function(){thumbs(z,key,edit)});return}
+        if(im){idb('readonly',function(s){return s.get(key)}).then(function(l){if(window.abrirLeitorArquivo)abrirLeitorArquivo(l[+im.dataset.v],'Mapa')});return}
+        if(p){var pz=z.querySelector('.pz');
+          if(navigator.clipboard&&navigator.clipboard.read){navigator.clipboard.read().then(function(its){for(var i=0;i<its.length;i++){var t=its[i].types.filter(function(x){return x.indexOf('image/')===0})[0];if(t){its[i].getType(t).then(function(bl){addImg(key,bl,z)});return}}T('Não há imagem copiada.','info')}).catch(function(){pz.hidden=false})}
+          else pz.hidden=false}});
+      if(edit){z.querySelector('input').addEventListener('change',function(e){addImg(key,e.target.files[0],z);e.target.value=''});
+        z.addEventListener('paste',function(e){var its=(e.clipboardData&&e.clipboardData.items)||[];for(var i=0;i<its.length;i++)if(its[i].type.indexOf('image/')===0){e.preventDefault();addImg(key,its[i].getAsFile(),z);z.querySelector('.pz').hidden=true;return}})}
+    });
+  }
+  function cardHtml(it){return window.v293Card?window.v293Card(it):''}
+
+  /* ---------- AGENDA REUTILIZÁVEL ---------- */
+  var cal={y:n0.getFullYear(),m:11,sel:null,foco:null},started=false;
+  function inicio(){var ds=(dadosApp.itinerario||[]).map(function(b){return b.dataInicio}).filter(Boolean).sort();
+    if(ds.length){var p=ds[0].split('-');cal.y=+p[0];cal.m=+p[1]-1}else{cal.y=n0.getFullYear();cal.m=11}}
+  function ag(){
+    var box=$('v294-ag');if(!box)return;if(!started){inicio();started=true}
+    var open=localStorage.getItem('v294_ag')==='1',h='<div class="hd" data-a="t"><span>📅 Agenda</span><span>'+(open?'▾':'▸')+'</span></div>';
+    if(open){
+      h+='<div class="v294-nav"><button class="v294-b" data-a="p">◀</button><select data-a="mes">'+MES.map(function(x,i){return '<option value="'+i+'"'+(i===cal.m?' selected':'')+'>'+x+'</option>'}).join('')+'</select><input type="number" data-a="ano" value="'+cal.y+'"><span class="sp"></span><button class="v294-b" data-a="n">▶</button></div>'+
+        '<div class="v294-nav"><button class="v294-b" data-a="v">✈️ Início da viagem</button><button class="v294-b" data-a="h">Hoje</button></div>';
+      var first=new Date(cal.y,cal.m,1).getDay(),n=new Date(cal.y,cal.m+1,0).getDate();
+      h+='<div class="v294-g">'+['D','S','T','Q','Q','S','S'].map(function(x){return '<i>'+x+'</i>'}).join('');
+      for(var i=0;i<first;i++)h+='<span></span>';
+      for(var d=1;d<=n;d++){var k=cal.y+'-'+pad(cal.m+1)+'-'+pad(d),bs=blocos(k);
+        h+='<button class="v294-d'+(k===HOJE?' h':'')+(k===cal.sel?' s':'')+(k===cal.foco?' f':'')+'" data-d="'+k+'"><span>'+d+'</span><u>'+bs.slice(0,3).map(function(b){return '<s style="background:'+esc(obterCorPorCategoria(b.categoria))+'"></s>'}).join('')+'</u></button>'}
+      h+='</div><div id="v294-dd"></div>';
+    }
+    box.innerHTML=h;
+    var dd=$('v294-dd');if(dd&&cal.sel){var bs2=blocos(cal.sel);dd.innerHTML=bs2.length?bs2.map(cardHtml).join(''):'<div style="font-size:13px;color:#64748b">Nada neste dia.</div>';prep(dd,false)}
+  }
+  window.v294Foco=function(d){var p=d.split('-');cal.y=+p[0];cal.m=+p[1]-1;cal.sel=d;cal.foco=d;started=true;try{localStorage.setItem('v294_ag','1')}catch(e){}ag()};
+
+  /* ---------- DESTINOS: incluir e editar ---------- */
+  function dm(){
+    var box=$('v294-dm');if(!box)return;var open=box.dataset.o==='1';
+    var h='<div style="display:flex;gap:6px;align-items:center"><b style="flex:1;font-size:13px">🎨 Destinos (nomes e cores)</b><button class="v294-b" data-a="t">'+(open?'Fechar':'＋ / ✏️ Editar')+'</button></div>';
+    if(open){(dadosApp.destinosCadastrados||[]).forEach(function(n,i){var c=obterCorPorCategoria(n)||'#6366f1';
+      h+='<div class="r"><input type="color" data-c="'+i+'" value="'+esc(c)+'"><input type="text" data-n="'+i+'" value="'+esc(n)+'"><button class="v294-b" data-s="'+i+'">💾</button><button class="v294-b" data-x="'+i+'">🗑</button></div>'});
+      h+='<div class="r"><input type="color" id="v294-nc" value="#ec4899"><input type="text" id="v294-nn" placeholder="Novo destino"><button class="v294-b" data-a="add">＋ Incluir</button></div>'}
+    box.innerHTML=h;
+  }
+  function dmClick(e){var x=e.target.closest('button');if(!x)return;var k=x.dataset,box=$('v294-dm'),d=dadosApp,L=d.destinosCadastrados||[];
+    if(k.a==='t'){box.dataset.o=box.dataset.o==='1'?'0':'1';dm();return}
+    if(k.a==='add'){var n=$('v294-nn').value.trim();if(!n)return;if(L.indexOf(n)>-1){T('Esse destino já existe.','erro');return}
+      undo();L.push(n);d.destinosCadastrados=L;(d.coresDestinos=d.coresDestinos||{})[n]=$('v294-nc').value;sv();ap();dm();T('Destino incluído!','sucesso');return}
+    if(k.s!==undefined){var i=+k.s,old=L[i],nome=box.querySelector('[data-n="'+i+'"]').value.trim()||old,cor=box.querySelector('[data-c="'+i+'"]').value;
+      undo();d.coresDestinos=d.coresDestinos||{};
+      if(nome!==old){L[i]=nome;(d.itinerario||[]).forEach(function(b){if(b.categoria===old)b.categoria=nome});(d.tarefas||[]).forEach(function(t){if(t.categoria===old)t.categoria=nome});delete d.coresDestinos[old];if(typeof destinoFiltro!=='undefined'&&destinoFiltro===old)destinoFiltro=nome}
+      d.coresDestinos[nome]=cor;(d.itinerario||[]).forEach(function(b){if(b.categoria===nome)b.cor=cor});sv();ap();dm();T('Destino salvo!','sucesso');return}
+    if(k.x!==undefined){var i2=+k.x,n2=L[i2];undo();L.splice(i2,1);if(typeof destinoFiltro!=='undefined'&&destinoFiltro===n2)destinoFiltro='todos';sv();ap();dm();T('Destino removido da lista (as rotas ficam). Use ↩️ Desfazer.','info')}}
+
+  /* ---------- BOLINHA FLUTUANTE ---------- */
+  var bd=HOJE;
+  function bolha(){
+    var m=$('v294-md');if(!m){m=document.createElement('div');m.id='v294-md';document.body.appendChild(m);
+      m.addEventListener('click',function(e){if(e.target===m){m.style.display='none';return}var b=e.target.closest('button,input');if(!b)return;
+        if(b.dataset.a==='x')m.style.display='none';else if(b.dataset.a==='p')mv(-1);else if(b.dataset.a==='n')mv(1);else if(b.dataset.a==='h'){bd=HOJE;bolha()}});
+      m.addEventListener('change',function(e){if(e.target.type==='date'&&e.target.value){bd=e.target.value;bolha()}})}
+    var bs=blocos(bd),p=bd.split('-');
+    m.innerHTML='<div><div class="v294-nav"><button class="v294-b" data-a="p">◀</button><input type="date" value="'+bd+'" style="width:auto;flex:1"><button class="v294-b" data-a="n">▶</button><button class="v294-b" data-a="h">Hoje</button><button class="v294-b" data-a="x">✕</button></div><div id="v294-bd" style="display:flex;flex-direction:column;gap:8px">'+(bs.length?bs.map(cardHtml).join(''):'<div style="background:#fff;border-radius:16px;padding:14px;text-align:center;color:#64748b">Nada em '+p[2]+'/'+p[1]+'/'+p[0]+'.</div>')+'</div></div>';
+    m.style.display='flex';prep($('v294-bd'),false);
+  }
+  function mv(n){var d=new Date(bd+'T00:00:00');d.setDate(d.getDate()+n);bd=d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());bolha()}
+  function mkBolha(){
+    if($('v294-bl'))return;var b=document.createElement('button');b.id='v294-bl';b.type='button';b.textContent='📅';b.setAttribute('aria-label','Ver o dia');document.body.appendChild(b);
+    try{var pos=JSON.parse(localStorage.getItem('v294_bl'));if(pos){b.style.right='auto';b.style.left=pos.x+'px';b.style.top=pos.y+'px';b.style.bottom='auto'}}catch(e){}
+    var drag=null,moved=false;
+    b.addEventListener('pointerdown',function(e){drag={x:e.clientX,y:e.clientY,l:b.getBoundingClientRect().left,t:b.getBoundingClientRect().top};moved=false;b.setPointerCapture(e.pointerId)});
+    b.addEventListener('pointermove',function(e){if(!drag)return;var dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)>8)moved=true;if(!moved)return;
+      b.style.right='auto';b.style.bottom='auto';b.style.left=Math.max(0,Math.min(innerWidth-42,drag.l+dx))+'px';b.style.top=Math.max(0,Math.min(innerHeight-42,drag.t+dy))+'px'});
+    b.addEventListener('pointerup',function(){if(!drag)return;drag=null;if(moved){try{localStorage.setItem('v294_bl',JSON.stringify({x:parseInt(b.style.left),y:parseInt(b.style.top)}))}catch(e){}}else{bd=cal.sel||HOJE;bolha()}});
+  }
+
+  function init(){
+    var f=$('filtros-leitura-container'),lista=$('v293-lista');if(!f||!lista||$('v294-ag'))return;
+    var a=document.createElement('div');a.id='v294-ag';f.insertAdjacentElement('beforebegin',a);
+    var d=document.createElement('div');d.id='v294-dm';f.insertAdjacentElement('afterend',d);
+    a.addEventListener('click',function(e){var x=e.target.closest('[data-a],[data-d]');if(!x)return;var k=x.dataset;if(x.tagName==='SELECT'||x.tagName==='INPUT')return;
+      if(k.a==='t')localStorage.setItem('v294_ag',localStorage.getItem('v294_ag')==='1'?'0':'1');
+      else if(k.a==='p'){if(--cal.m<0){cal.m=11;cal.y--}}else if(k.a==='n'){if(++cal.m>11){cal.m=0;cal.y++}}
+      else if(k.a==='h'){cal.y=n0.getFullYear();cal.m=n0.getMonth();cal.sel=HOJE}
+      else if(k.a==='v')inicio();
+      else if(k.d){cal.sel=k.d;cal.foco=null}
+      ag()});
+    a.addEventListener('change',function(e){var t=e.target;if(t.dataset.a==='mes'){cal.m=+t.value;ag()}else if(t.dataset.a==='ano'&&+t.value>1900){cal.y=+t.value;ag()}});
+    d.addEventListener('click',dmClick);
+    new MutationObserver(function(){setTimeout(function(){prep(lista,true)},50)}).observe(lista,{childList:true});prep(lista,true);
+    dm();ag();mkBolha();
+  }
+  var oa=window.atualizarTudo;window.atualizarTudo=function(){var r=oa.apply(this,arguments);try{ag();var m=$('v294-dm');if(m&&m.dataset.o!=='1')dm()}catch(e){}return r};
+  [500,1500,2800,4200].forEach(function(ms){setTimeout(init,ms)});
+})();
+</script>
+<!--/V294-->
 </body>
 </html>
