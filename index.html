@@ -10447,5 +10447,136 @@ body.v287-typing #v300-tabs,body.v287-typing #v300-handle{display:none!important
 })();
 </script>
 <!--/V301-->
+<!--V302-->
+<style>
+.v301-p svg,#v301-pf svg{display:block}
+.v301-p{padding:0!important;overflow:hidden}
+#v301-pf button{display:inline-flex;align-items:center;gap:6px}
+#v301-pf button svg{width:22px;height:22px}
+label.v301-pr{cursor:pointer}
+</style>
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i)};
+  function T(m,t){if(window.mostrarToast)mostrarToast(m,t||'info')}
+  function sv(){try{salvarStorage()}catch(e){}}
+  function esc(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+  function item(id){return (dadosApp.itinerario||[]).filter(function(i){return String(i.id)===String(id)})[0]}
+
+  /* ---------- 1. Bonecas de cabelo preto ---------- */
+  function av(k,s){
+    var sk='#f6c9a3',h='#111',face='<circle cx="18" cy="19" r="9" fill="'+sk+'"/>',
+    eyes='<circle cx="14.5" cy="19.5" r="1.1" fill="#222"/><circle cx="21.5" cy="19.5" r="1.1" fill="#222"/><path d="M15 23.3c1.5 1.4 4.5 1.4 6 0" stroke="#b4533a" stroke-width="1.2" fill="none" stroke-linecap="round"/>',
+    cap='<path d="M9 18C9 11 13 9 18 9s9 2 9 9c-4-1-7-3-9-6-2 3-5 5-9 6z" fill="'+h+'"/>',g='';
+    if(k==='Mariana')g='<path d="M7 31C5 18 8 7 18 7s13 11 11 24c-3-2-3-6-3-10H10c0 4 0 8-3 10z" fill="'+h+'"/>'+face+cap+eyes;
+    else if(k==='Sofia')g='<circle cx="8" cy="23" r="4" fill="'+h+'"/><circle cx="28" cy="23" r="4" fill="'+h+'"/>'+face+cap+'<circle cx="9" cy="15" r="2" fill="#ec4899"/><circle cx="27" cy="15" r="2" fill="#ec4899"/>'+eyes+'<circle cx="12.5" cy="22" r="1.4" fill="#f9a8a8" opacity=".6"/><circle cx="23.5" cy="22" r="1.4" fill="#f9a8a8" opacity=".6"/>';
+    else g='<circle cx="18" cy="8" r="4.5" fill="'+h+'"/>'+face+cap+eyes+'<circle cx="14.5" cy="19.5" r="2.8" fill="none" stroke="#555" stroke-width=".9"/><circle cx="21.5" cy="19.5" r="2.8" fill="none" stroke="#555" stroke-width=".9"/><path d="M17.3 19.5h1.4" stroke="#555" stroke-width=".9"/>';
+    return '<svg viewBox="0 0 36 36" width="'+(s||30)+'" height="'+(s||30)+'" aria-hidden="true"><rect width="36" height="36" fill="#eef2ff"/>'+g+'</svg>';
+  }
+  /* ---------- 2. Imagens guardadas só no aparelho ---------- */
+  var dbp=null;
+  function dbo(){if(dbp)return dbp;dbp=new Promise(function(res,rej){var r=indexedDB.open('v294_img',1);r.onupgradeneeded=function(){r.result.createObjectStore('i')};r.onsuccess=function(){res(r.result)};r.onerror=function(){rej(r.error)}});return dbp}
+  function idb(mode,fn){return dbo().then(function(d){return new Promise(function(res,rej){var t=d.transaction('i',mode),q=fn(t.objectStore('i'));t.oncomplete=function(){res(q&&q.result)};t.onerror=function(){rej(t.error)}})})}
+  function imgs(keys){return Promise.all(keys.map(function(k){return idb('readonly',function(s){return s.get(k)}).catch(function(){return []})})).then(function(a){return [].concat.apply([],a.map(function(l){return l||[]}))})}
+  function addLocal(key,blob){
+    return (typeof comprimirImagem==='function'?comprimirImagem(blob,1200,.7):Promise.resolve(null)).then(function(u){if(!u)throw 0;
+      return idb('readonly',function(s){return s.get(key)}).then(function(l){l=l||[];l.push(u);return idb('readwrite',function(s){return s.put(l,key)})})})}
+
+  /* foto de condução: antes ia para a nuvem, agora fica só no celular */
+  window.adicionarFotoExtraTrecho=function(itemId,trechoId,condId,ev){
+    var f=ev.target.files[0];if(!f)return;
+    addLocal(itemId+'|'+trechoId,f).then(function(){T('Foto salva SÓ neste aparelho!','sucesso')}).catch(function(){T('Não consegui salvar a foto.','erro')});
+    ev.target.value='';
+  };
+  /* fotos antigas que já estavam nos dados: passam para o celular */
+  function migrarFotos(){
+    (dadosApp.itinerario||[]).forEach(function(it){(it.trechos||[]).forEach(function(tr){(tr.conducoes||[]).forEach(function(c){
+      if(!c.fotosExtras||!c.fotosExtras.length)return;
+      var key=it.id+'|'+tr.id,novas=c.fotosExtras.slice();
+      idb('readonly',function(s){return s.get(key)}).then(function(l){l=(l||[]).concat(novas);return idb('readwrite',function(s){return s.put(l,key)})})
+      .then(function(){c.fotosExtras=[];sv()}).catch(function(){});
+    })})});
+  }
+  [3000,7000].forEach(function(ms){setTimeout(migrarFotos,ms)});
+
+  /* ---------- 3. Impressão ABERTA, com mapas ---------- */
+  var ICO={'Trem':'🚆','Ônibus':'🚌','Metrô':'🚇','Carro':'🚗','A pé':'🚶','Avião':'✈️','Outro':'📦'};
+  function pkey(tr,pt){return tr.id+'|'+(pt.k==='p'&&pt.p?pt.p.id:pt.k)}
+  function fm(d){return d?d.split('-').reverse().join('/'):'?'}
+  function pics(l){return l.length?'<div class="im">'+l.map(function(u){return '<img src="'+u+'">'}).join('')+'</div>':''}
+  async function htmlTrecho(it,tr){
+    var P=window.v277Percurso(it,tr),ex=it.pontosExtra||{},n=P.pts.length,o=ex[tr.id+'|o']||{},d=ex[tr.id+'|d']||{};
+    var h='<div class="tr"><h2>'+esc(P.pts[0].nome||'?')+' ➔ '+esc(P.pts[n-1].nome||'?')+((o.hora||d.hora)?' <small>'+esc(o.hora||'')+' – '+esc(d.hora||'')+'</small>':'')+'</h2>';
+    h+=pics(await imgs([it.id+'|'+tr.id]));
+    for(var j=0;j<n;j++){
+      var pt=P.pts[j],x=ex[pkey(tr,pt)]||{},txt=pt.k==='o'?tr.textoSaida:pt.k==='d'?tr.textoChegada:(pt.p&&pt.p.texto);
+      h+='<div class="pt"><b>'+(x.hora?esc(x.hora)+' · ':'')+(pt.k==='o'?'📍 ':pt.k==='d'?'🏁 ':'🛑 ')+esc(pt.nome||'—')+'</b>'+(x.link?' <span class="lk">'+esc(x.link)+'</span>':'')+(txt?'<div>'+esc(txt)+'</div>':'')+'</div>';
+      if(j<n-1){
+        (P.legs[j]||[]).forEach(function(l){var c=l.c;
+          h+='<div class="lg">'+(ICO[c.transporte]||'🚌')+' '+esc(c.transporte)+' '+(c.linhas||[]).map(function(z){return '<span class="ch">'+esc(z.nome)+'</span>'}).join(' ')+(c.valor?' · '+esc(c.valor)+' '+esc(c.moeda):'')+(c.notas?'<div>'+esc(c.notas)+'</div>':'')+'</div>'});
+        h+=pics(await imgs(['leg|'+it.id+'|'+tr.id+'|'+j,'L|'+it.id+'|'+pkey(tr,pt)+'>'+pkey(tr,P.pts[j+1])]));
+      }
+    }
+    return h+'</div>';
+  }
+  async function htmlBloco(it){
+    var h='<div class="bl"><h1>'+esc(it.categoria)+' <small>📅 '+fm(it.dataInicio)+' ➔ '+fm(it.dataFim||it.dataInicio)+'</small></h1>';
+    var zs=(it.zonasLista||[]).map(function(z){return esc(z.local+' · '+z.zona)}).join(', ');if(zs)h+='<div>🎫 '+zs+'</div>';
+    var ts=(it.trechos||[]).filter(function(t){return t.origem||t.destino});
+    for(var i=0;i<ts.length;i++)h+=await htmlTrecho(it,ts[i]);
+    (it.itens||[]).forEach(function(n){if(n.texto&&n.texto.trim())h+='<div>📌 '+esc(n.texto)+'</div>'});
+    return h+'</div>';
+  }
+  async function imprimirAberto(titulo,gerar){
+    var w=window.open('','_blank');if(!w){T('Libere pop-ups para imprimir.','erro');return}
+    w.document.write('<p style="font-family:sans-serif">Preparando impressão…</p>');
+    try{
+      var corpo=await gerar();
+      w.document.open();
+      w.document.write('<html><head><meta charset="utf-8"><title>'+esc(titulo)+'</title><style>body{font-family:system-ui,sans-serif;color:#0f172a;padding:16px;font-size:14px}h1{font-size:20px;margin:0 0 6px}h2{font-size:16px;margin:12px 0 6px}small{font-weight:600;color:#475569;font-size:13px}.tr{border:1px solid #cbd5e1;border-radius:12px;padding:10px;margin:10px 0;page-break-inside:avoid}.pt{margin:6px 0}.lg{margin:4px 0 4px 14px;padding-left:10px;border-left:3px dashed #6366f1;color:#334155}.ch{background:#e2231a;color:#fff;border-radius:3px;padding:0 6px;font-weight:800;font-size:12px}.lk{color:#475569;font-size:11px;word-break:break-all}.im img{max-width:100%;max-height:520px;border:1px solid #cbd5e1;border-radius:8px;margin:6px 6px 0 0}</style></head><body>'+corpo+'<script>setTimeout(function(){window.print()},700)<\/script></body></html>');
+      w.document.close();
+    }catch(e){console.error(e);w.close();T('Erro ao montar a impressão.','erro')}
+  }
+  /* captura os botões 🖨️ do Roteiro antes dos antigos */
+  document.addEventListener('click',function(e){
+    var b=e.target.closest&&e.target.closest('.v295-ch .v301-pr, .v295-th .v301-pr');if(!b)return;
+    e.stopPropagation();e.stopImmediatePropagation();e.preventDefault();
+    var c=b.closest('.v295-card'),it=c&&item(c.dataset.i);if(!it)return;
+    var sh=b.closest('.v295-sh');
+    if(sh){
+      var bt=sh.querySelector('button[data-t]'),tr=bt&&(it.trechos||[]).filter(function(t){return String(t.id)===String(bt.dataset.t)})[0];
+      if(tr)return imprimirAberto('Rota',async function(){return '<h1>'+esc(it.categoria)+'</h1>'+await htmlTrecho(it,tr)});
+    }
+    imprimirAberto(it.categoria||'Bloco',function(){return htmlBloco(it)});
+  },true);
+
+  /* ---------- 4. Decorações: bonecas e câmera ---------- */
+  function dec(){
+    [].forEach.call(document.querySelectorAll('.v301-p:not([data-v302])'),function(b){b.dataset.v302=1;b.innerHTML=av(b.dataset.p,32)});
+    [].forEach.call(document.querySelectorAll('#v301-pf button[data-p]:not([data-v302])'),function(b){
+      b.dataset.v302=1;if(b.dataset.p!=='todas')b.innerHTML=av(b.dataset.p,22)+'<span>'+b.dataset.p+'</span>'});
+    /* câmera nos voos e vouchers do Hub (foto salva só no celular) */
+    [].forEach.call(document.querySelectorAll('.v301-bar:not([data-cam])'),function(bar){
+      bar.dataset.cam=1;var t=bar.dataset.t;if(t!=='voos'&&t!=='vouchers')return;
+      var l=document.createElement('label');l.className='v301-pr';l.title='Tirar foto (fica só neste aparelho)';l.setAttribute('aria-label','Tirar foto');
+      l.innerHTML='📷<input type="file" accept="image/*" capture="environment" hidden>';
+      l.querySelector('input').addEventListener('change',function(ev){
+        var id=+bar.dataset.i;(t==='voos'?window.anexarPdfVoo:window.anexarPdfVoucher)(id,ev)});
+      bar.insertBefore(l,bar.querySelector('.sp'));
+    });
+    /* câmera nos mapas de cada trecho */
+    [].forEach.call(document.querySelectorAll('.v297-lm[data-e]:not([data-cam])'),function(lm){
+      lm.dataset.cam=1;var ref=lm.querySelector('label.v297-b');if(!ref)return;
+      var l=document.createElement('label');l.className='v297-b';
+      l.innerHTML='📸 Câmera<input type="file" accept="image/*" capture="environment" hidden>';
+      ref.insertAdjacentElement('afterend',l);
+    });
+  }
+  var t=null;
+  new MutationObserver(function(){clearTimeout(t);t=setTimeout(dec,120)}).observe(document.body,{childList:true,subtree:true});
+  [600,1800,3500].forEach(function(ms){setTimeout(dec,ms)});
+})();
+</script>
+<!--/V302-->
 </body>
 </html>
