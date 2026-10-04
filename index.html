@@ -9888,5 +9888,270 @@ body.v287-typing #v297-cal{display:none!important}
 })();
 </script>
 <!--/V298-->
+<!--V299-->
+<!-- CAMADA v299:
+     (1) "Digitar nova rota" abre sempre FECHADO (você abre quando quiser);
+     (2) cards de baixo sempre organizados pela data (data mais tarde vai para baixo; mesma data mantém a ordem das setas ⬆️⬇️);
+     (3) check em cada etapa + check do bloco inteiro: risca, desce, e o próximo por data sobe e pisca;
+     (4) calendário flutuante 📅 refeito (o anterior apontava para caixas que não existem).
+     Cole logo ANTES de </body>, depois da v298. Não precisa remover nada. -->
+<style>
+/* ---------- pisca do card da vez ---------- */
+@keyframes v299p{0%,100%{box-shadow:0 0 0 0 rgba(244,63,94,.85),0 6px 20px rgba(244,63,94,.2);outline-color:rgba(244,63,94,.95)}50%{box-shadow:0 0 0 12px rgba(244,63,94,0),0 6px 24px rgba(244,63,94,.4);outline-color:rgba(244,63,94,.25)}}
+.v295-card.v299-vez{outline:3px solid #f43f5e;outline-offset:2px;animation:v299p 1.3s ease-in-out infinite}
+.v295-card.v296-now:not(.v299-vez),.v295-card.v296-next:not(.v299-vez){animation:none!important;outline:none!important}
+@media (prefers-reduced-motion:reduce){.v295-card.v299-vez{animation:none}}
+
+/* ---------- checks ---------- */
+.v299-cb{width:22px;height:22px;flex:none;accent-color:#16a34a;cursor:pointer;margin:0}
+.v299-cb.v299-all{width:26px;height:26px}
+.v295-r.v299-ok .v295-h b,.v295-r.v299-ok .v295-h .hr,.v295-r.v299-ok .v295-lh .sm{text-decoration:line-through;color:#94a3b8}
+.v295-r.v299-ok .dot{background:#16a34a!important;border-color:#16a34a!important}
+.v295-card.v299-feito{opacity:.62;background:#f0fdf4!important;border-color:#86efac!important}
+.v299-feito .v295-ch .dt,.v299-feito .v295-ch .bd,.v299-feito .v295-sh .tt{text-decoration:line-through}
+
+/* ---------- calendário flutuante (gaveta à direita) ---------- */
+#v297-cal{display:none!important}
+#v299-cal{position:fixed;right:8px;bottom:108px;width:36px;height:36px;border-radius:50%;border:0;color:#fff;font-size:16px;z-index:140;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0ea5e9,#6366f1);box-shadow:0 3px 10px rgba(0,0,0,.25);opacity:.8;touch-action:manipulation}
+body.v287-typing #v299-cal{display:none!important}
+#v299-md{position:fixed;inset:0;z-index:150;display:none;justify-content:flex-end;background:rgba(15,23,42,.4)}
+#v299-md .bx{width:min(92vw,420px);height:100%;max-height:100vh;max-height:100dvh;overflow-y:auto;overflow-x:hidden;box-sizing:border-box;background:#f4f3ff;color:#0f172a;border-radius:24px 0 0 24px;padding:12px 12px 90px}
+.v299-top{display:flex;align-items:center;gap:8px;font-size:16px;margin-bottom:8px}.v299-top b{flex:1}
+.v299-nav{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:6px 0}
+.v299-nav select{flex:1 1 110px;min-width:0;padding:8px;border:1px solid #cbd5e1;border-radius:10px;font-weight:800;color:#0f172a;background:#fff}
+.v299-nav input{flex:0 0 78px;width:78px;min-width:0;padding:8px;border:1px solid #cbd5e1;border-radius:10px;font-weight:800;color:#0f172a;background:#fff}
+.v299-b{padding:8px 11px;border-radius:11px;border:1px solid #c7d2fe;background:#eef2ff;color:#3730a3;font-weight:800;font-size:12px}
+.v299-g{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-top:6px}
+.v299-g i{text-align:center;font-size:10px;font-weight:800;color:#64748b;font-style:normal}
+.v299-d{min-width:0;min-height:40px;border-radius:10px;border:1px solid #e2e8f0;background:#fff;font-weight:800;font-size:13px;color:#0f172a;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:1px}
+.v299-d.h{border:2px solid #f59e0b}.v299-d.s{background:#e0e7ff;border-color:#6366f1}
+.v299-d u{display:flex;gap:2px;height:6px}.v299-d u s{width:6px;height:6px;border-radius:50%;display:block}
+#v299-dd{margin-top:10px;display:flex;flex-direction:column;gap:10px;min-width:0}
+#v299-dd .v295-card{min-width:0;max-width:100%;overflow:hidden}
+.v299-vz{background:#fff;border-radius:14px;padding:12px;text-align:center;color:#64748b;font-size:13px}
+</style>
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i)};
+  function pad(n){return n<10?'0'+n:''+n}
+  function fmt(d){return d?d.split('-').reverse().join('/'):'?'}
+  function sv(){try{salvarStorage()}catch(e){}}
+  function undo(){try{registarEstadoAnterior()}catch(e){}}
+  function item(id){return (dadosApp.itinerario||[]).filter(function(i){return String(i.id)===String(id)})[0]}
+  function temRota(b){return (b.trechos||[]).some(function(t){return t.origem||t.destino})}
+  function pkey(tr,pt){return tr.id+'|'+(pt.k==='p'&&pt.p?pt.p.id:pt.k)}
+  var n0=new Date(),HOJE=n0.getFullYear()+'-'+pad(n0.getMonth()+1)+'-'+pad(n0.getDate());
+
+  /* =====================================================
+     1. "Digitar nova rota" começa fechado
+     ===================================================== */
+  var fechado=false;
+  function fecharForm(){
+    if(fechado)return;
+    var box=$('v293-mk');if(!box)return;
+    var hd=box.querySelector('.hd');if(!hd)return;
+    fechado=true;
+    if($('v293-lk'))hd.click();   /* só clica se estiver aberto */
+  }
+
+  /* =====================================================
+     3. Checks: etapas e bloco inteiro
+     ===================================================== */
+  function chaves(it){
+    var ks=[];
+    (it.trechos||[]).forEach(function(tr){
+      if(!(tr.origem||tr.destino)||!window.v277Percurso)return;
+      var P=window.v277Percurso(it,tr);
+      P.pts.forEach(function(pt,j){
+        ks.push('P|'+it.id+'|'+pkey(tr,pt));
+        if(j<P.pts.length-1)ks.push('L|'+it.id+'|'+pkey(tr,pt)+'|'+pkey(tr,P.pts[j+1]));
+      });
+    });
+    return ks;
+  }
+  /* o bloco está "feito" quando TODAS as etapas estão marcadas */
+  function feitoDe(it){var f=it.feitos||{},ks=chaves(it);return ks.length>0&&ks.every(function(k){return f[k]})}
+
+  function pinta(card){
+    var it=item(card.dataset.i);if(!it)return;
+    var f=it.feitos||{};
+    card.classList.toggle('v299-feito',feitoDe(it));
+    var all=card.querySelector('.v295-ch .v299-all');if(all)all.checked=feitoDe(it);
+    [].forEach.call(card.querySelectorAll('.v295-h[data-ok]'),function(h){
+      var on=!!f[h.dataset.ok],cb=h.querySelector('.v299-cb'),r=h.closest('.v295-r');
+      if(cb)cb.checked=on;if(r)r.classList.toggle('v299-ok',on);
+    });
+  }
+  function novoCb(cls,tit){
+    var c=document.createElement('input');c.type='checkbox';c.className=cls;c.title=tit;c.setAttribute('aria-label',tit);
+    c.addEventListener('click',function(e){e.stopPropagation()});   /* não abre/fecha o card */
+    return c;
+  }
+  function decorar(){
+    [].forEach.call(document.querySelectorAll('.v295-card'),function(card){
+      var it=item(card.dataset.i);if(!it)return;
+      var ch=card.querySelector('.v295-ch');
+      if(ch&&!ch.querySelector('.v299-all'))ch.insertBefore(novoCb('v299-cb v299-all','Marcar o bloco inteiro como feito'),ch.children[1]||null);
+      [].forEach.call(card.querySelectorAll('.v295-h[data-ok]'),function(h){
+        if(h.querySelector('.v299-cb'))return;
+        var cb=novoCb('v299-cb','Marcar esta etapa como feita');cb.dataset.k=h.dataset.ok;
+        h.insertBefore(cb,h.firstChild);
+      });
+      pinta(card);
+    });
+  }
+  document.addEventListener('change',function(e){
+    var t=e.target;if(!t.classList||!t.classList.contains('v299-cb'))return;
+    var card=t.closest('.v295-card'),it=card&&item(card.dataset.i);if(!it)return;
+    undo();it.feitos=it.feitos||{};
+    if(t.classList.contains('v299-all')){
+      chaves(it).forEach(function(k){if(t.checked)it.feitos[k]=true;else delete it.feitos[k]});
+    }else{
+      if(t.checked)it.feitos[t.dataset.k]=true;else delete it.feitos[t.dataset.k];
+    }
+    sv();
+    [].forEach.call(document.querySelectorAll('.v295-card'),function(c){if(c.dataset.i===card.dataset.i)pinta(c)});
+    organizar();
+  });
+
+  /* =====================================================
+     2. Ordem: pendentes por data, feitos no fim;
+        mesma data = ordem manual (setas ⬆️⬇️)
+     ===================================================== */
+  var busy=false;
+  function organizar(){
+    if(!window.v277Percurso)return;
+    var box=$('v295-lista'),d=dadosApp,ord=(d.ordemCards||[]).map(String);
+    var dom={};
+    if(box)[].forEach.call(box.querySelectorAll(':scope > .v295-card'),function(c,i){dom[c.dataset.i]=i});
+    var arr=(d.itinerario||[]).filter(temRota).map(function(b,p){
+      var id=String(b.id),o=ord.indexOf(id);
+      return {id:id,f:feitoDe(b)?1:0,d:b.dataInicio||'9999-99-99',o:o<0?1e9:o,m:dom[id]===undefined?1e8:dom[id],p:p};
+    });
+    arr.sort(function(a,b){return a.f-b.f||(a.d<b.d?-1:a.d>b.d?1:0)||a.o-b.o||a.m-b.m||a.p-b.p});
+    var nova=arr.map(function(x){return x.id});
+    if(JSON.stringify(nova)!==JSON.stringify(ord)){d.ordemCards=nova;sv()}
+    if(!box)return;
+    var cs=[].slice.call(box.querySelectorAll(':scope > .v295-card')),pos={};
+    nova.forEach(function(id,i){pos[id]=i});
+    var s=cs.slice().sort(function(a,b){
+      var x=pos[a.dataset.i],y=pos[b.dataset.i];return (x===undefined?1e9:x)-(y===undefined?1e9:y)});
+    if(s.some(function(c,k){return c!==cs[k]})){
+      busy=true;s.forEach(function(c){box.appendChild(c)});
+      setTimeout(function(){busy=false},0);
+    }
+    /* o primeiro card ainda não feito é o da vez: pisca */
+    var vez=null;
+    s.forEach(function(c){c.classList.remove('v299-vez');if(!vez){var it=item(c.dataset.i);if(it&&!feitoDe(it))vez=c}});
+    if(vez)vez.classList.add('v299-vez');
+  }
+
+  /* =====================================================
+     4. Calendário flutuante (gaveta à direita)
+     ===================================================== */
+  var MES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  var cal={y:n0.getFullYear(),m:n0.getMonth(),sel:null,open:false};
+  function blocosDia(dia){return (dadosApp.itinerario||[]).filter(function(b){var a=b.dataInicio,z=b.dataFim||a;return a&&a<=dia&&dia<=z&&temRota(b)})}
+  function alvoData(){
+    var r=(dadosApp.itinerario||[]).filter(temRota).map(function(b){return [b.dataInicio,b.dataFim||b.dataInicio]}).filter(function(x){return x[0]});
+    if(!r.length)return null;
+    if(r.some(function(x){return x[0]<=HOJE&&HOJE<=x[1]}))return HOJE;
+    var fut=r.filter(function(x){return x[0]>HOJE}).map(function(x){return x[0]}).sort();
+    return fut.length?fut[0]:r.map(function(x){return x[1]}).sort().pop();
+  }
+  function irPara(dia){var p=dia.split('-');cal.y=+p[0];cal.m=+p[1]-1;cal.sel=dia}
+  function cor(n){return (typeof obterCorPorCategoria==='function'&&obterCorPorCategoria(n))||'#6366f1'}
+
+  function draw(){
+    var o=$('v299-md');if(!o)return;
+    var bx=o.firstElementChild,st=bx.scrollTop;
+    var first=new Date(cal.y,cal.m,1).getDay(),n=new Date(cal.y,cal.m+1,0).getDate();
+    var h='<div class="v299-top"><b>📅 Calendário</b><button type="button" class="v299-b" data-c="x" aria-label="Fechar">✕</button></div>'+
+      '<div class="v299-nav"><button type="button" class="v299-b" data-c="p" aria-label="Mês anterior">◀</button>'+
+      '<select data-c="mes">'+MES.map(function(x,i){return '<option value="'+i+'"'+(i===cal.m?' selected':'')+'>'+x+'</option>'}).join('')+'</select>'+
+      '<input type="number" data-c="ano" value="'+cal.y+'">'+
+      '<button type="button" class="v299-b" data-c="n" aria-label="Próximo mês">▶</button></div>'+
+      '<div class="v299-nav"><button type="button" class="v299-b" data-c="v">✈️ Início da viagem</button><button type="button" class="v299-b" data-c="h">Hoje</button></div>'+
+      '<div class="v299-g">'+['D','S','T','Q','Q','S','S'].map(function(x){return '<i>'+x+'</i>'}).join('');
+    for(var i=0;i<first;i++)h+='<span></span>';
+    for(var d=1;d<=n;d++){
+      var k=cal.y+'-'+pad(cal.m+1)+'-'+pad(d),bs=blocosDia(k);
+      h+='<button type="button" class="v299-d'+(k===HOJE?' h':'')+(k===cal.sel?' s':'')+'" data-c="d" data-d="'+k+'"><span>'+d+'</span><u>'+
+        bs.slice(0,3).map(function(b){return '<s style="background:'+cor(b.categoria)+'"></s>'}).join('')+'</u></button>';
+    }
+    h+='</div><div id="v299-dd">';
+    if(cal.sel){
+      var bl=blocosDia(cal.sel);
+      h+='<div style="font-weight:800;font-size:13px">'+fmt(cal.sel)+'</div>';
+      h+=bl.length?bl.map(function(it){return window.v293Card?window.v293Card(it):''}).join(''):'<div class="v299-vz">Nada neste dia.</div>';
+    }else h+='<div class="v299-vz">Toque num dia para ver as rotas.</div>';
+    h+='</div>';
+    bx.innerHTML=h;bx.scrollTop=st;
+    decorar();
+  }
+  function abrir(){
+    var o=$('v299-md');if(!o)return;
+    var a=alvoData();
+    if(a)irPara(a);else{cal.y=n0.getFullYear();cal.m=n0.getMonth();cal.sel=null}
+    cal.open=true;o.style.display='flex';draw();
+  }
+  function fechar(){var o=$('v299-md');if(o)o.style.display='none';cal.open=false}
+  function montarCal(){
+    if($('v299-cal'))return;
+    var b=document.createElement('button');b.id='v299-cal';b.type='button';b.textContent='📅';b.setAttribute('aria-label','Abrir ou fechar o calendário');
+    b.addEventListener('click',function(){cal.open?fechar():abrir()});
+    document.body.appendChild(b);
+    var o=document.createElement('div');o.id='v299-md';o.innerHTML='<div class="bx"></div>';
+    document.body.appendChild(o);
+    o.addEventListener('click',function(e){
+      if(e.target===o){fechar();return}
+      var x=e.target.closest('[data-c]');if(!x||x.tagName==='SELECT'||x.tagName==='INPUT')return;
+      var c=x.dataset.c;
+      if(c==='x'){fechar();return}
+      if(c==='p'){if(--cal.m<0){cal.m=11;cal.y--}}
+      else if(c==='n'){if(++cal.m>11){cal.m=0;cal.y++}}
+      else if(c==='h'){irPara(HOJE)}
+      else if(c==='v'){var a=alvoData();if(a)irPara(a)}
+      else if(c==='d'){cal.sel=x.dataset.d}
+      else return;
+      draw();
+    });
+    o.addEventListener('change',function(e){
+      var t=e.target;
+      if(t.dataset.c==='mes'){cal.m=+t.value;draw()}
+      else if(t.dataset.c==='ano'&&+t.value>1900){cal.y=+t.value;draw()}
+    });
+  }
+  /* quando os dados mudam com a gaveta aberta, atualiza */
+  var oa=window.atualizarTudo;
+  window.atualizarTudo=function(){
+    var r=oa.apply(this,arguments);
+    setTimeout(function(){
+      try{
+        var o=$('v299-md'),a=document.activeElement;
+        if(cal.open&&o&&!(a&&o.contains(a)&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)))draw();
+      }catch(e){}
+    },0);
+    return r;
+  };
+
+  /* =====================================================
+     ligar tudo
+     ===================================================== */
+  var ligado=false,t1=null,t2=null;
+  function ligar(){
+    montarCal();fecharForm();
+    var lista=$('v295-lista');
+    if(lista&&!ligado){
+      ligado=true;
+      new MutationObserver(function(){if(busy)return;clearTimeout(t1);t1=setTimeout(function(){organizar();decorar()},60)}).observe(lista,{childList:true});
+    }
+    organizar();decorar();
+  }
+  new MutationObserver(function(){clearTimeout(t2);t2=setTimeout(decorar,150)}).observe(document.body,{childList:true,subtree:true});
+  [700,1600,3000,4600,6500,9000].forEach(function(ms){setTimeout(ligar,ms)});
+})();
+</script>
+<!--/V299-->
 </body>
 </html>
