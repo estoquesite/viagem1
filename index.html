@@ -10578,5 +10578,115 @@ label.v301-pr{cursor:pointer}
 })();
 </script>
 <!--/V302-->
+<!--V303-->
+<style>
+.v303-av{display:inline-flex;align-items:center;gap:5px;vertical-align:middle}
+.v303-av svg{border-radius:50%;flex:none}
+.v303-day{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.v303-day b{flex:1;font-size:13px}
+.v303-day button{padding:9px 12px;border-radius:11px;border:0;background:linear-gradient(135deg,#6366f1,#7c3aed);color:#fff;font-weight:800;font-size:12px}
+.v295-tl:not(.v303-open) > .v303-mid{display:none}
+.v303-sum .v295-h{min-height:34px;cursor:pointer}
+.v303-sum b{color:#475569;font-weight:700;font-size:14px}
+</style>
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i)};
+  function T(m,t){if(window.mostrarToast)mostrarToast(m,t||'info')}
+  function esc(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+  function fm(d){return d?d.split('-').reverse().join('/'):'?'}
+
+  /* ---------- 1. Bonecas de cabelo preto em Compras e Orçamento ---------- */
+  var RX=/^(\s*)(?:👤|👧|👵)\s*(Mariana|Sofia|Glória)([\s\S]*)$/;
+  function avatares(){
+    if(!window.v302)return;
+    ['tab-compras','tab-orcamento'].forEach(function(id){
+      var root=$(id);if(!root)return;
+      var w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null),lista=[],n;
+      while((n=w.nextNode())){
+        var p=n.parentNode;
+        if(RX.test(n.nodeValue)&&p&&!/^(OPTION|TEXTAREA|SCRIPT|STYLE)$/.test(p.tagName))lista.push(n);
+      }
+      lista.forEach(function(n){
+        var m=n.nodeValue.match(RX),s=document.createElement('span'),t=document.createElement('span');
+        s.className='v303-av';s.innerHTML=window.v302.av(m[2],22);
+        t.textContent=m[2]+m[3];s.appendChild(t);
+        n.parentNode.replaceChild(s,n);
+      });
+    });
+  }
+
+  /* ---------- 2. Calendário: mesmo cartão do Roteiro, aberto, com início / meio / fim ---------- */
+  var abertos={},meio={};
+  var CTX=[
+    ['v299-dd',function(){var s=document.querySelector('#v299-md .v299-d.s');return s&&s.dataset.d},function(){var m=$('v299-md');return m&&m.style.display!=='none'}],
+    ['v294-dd',function(){var s=document.querySelector('#v294-ag .v294-d.s');return s&&s.dataset.d},function(){return true}]
+  ];
+  function calendario(){
+    CTX.forEach(function(c){
+      var dd=$(c[0]);
+      if(!dd||!c[2]()||!dd.children.length){Object.keys(abertos).forEach(function(k){if(k.indexOf(c[0]+'|')===0)delete abertos[k]});return}
+      var dia=c[1]()||'';
+      if(dia&&dd.querySelector('.v295-card')&&!dd.querySelector('.v303-day')){
+        var bar=document.createElement('div');bar.className='v303-day';bar.dataset.d=dia;
+        bar.innerHTML='<b>'+fm(dia)+'</b><button type="button">🖨️ Imprimir o dia (aberto)</button>';
+        dd.insertBefore(bar,dd.firstChild);
+      }
+      [].forEach.call(dd.querySelectorAll('.v295-card'),function(card){
+        var key=c[0]+'|'+dia+'|'+card.dataset.i,cv=card.querySelector('.v295-ch .v295-cv');
+        if(!abertos[key]){
+          abertos[key]=1;
+          if(cv&&cv.textContent.trim()==='▸'){var ch=card.querySelector('.v295-ch');if(ch)ch.click();return}
+        }
+        [].forEach.call(card.querySelectorAll('.v295-tl'),function(tl){
+          if(tl.dataset.v303)return;
+          var rows=[].slice.call(tl.children).filter(function(r){return r.classList.contains('v295-r')});
+          var mid=rows.filter(function(r){return !r.classList.contains('f')&&!r.classList.contains('e')});
+          if(mid.length<3)return;
+          tl.dataset.v303='1';
+          var sh=tl.closest('.v295-sh'),bt=sh&&sh.querySelector('button[data-t]'),mk=card.dataset.i+'|'+(bt?bt.dataset.t:'');
+          mid.forEach(function(r){r.classList.add('v303-mid')});
+          var nStops=(mid.length-1)/2;
+          var sum=document.createElement('div');sum.className='v295-r v303-sum';sum.dataset.mk=mk;
+          sum.innerHTML='<div class="v295-g"></div><div class="v295-c"><div class="v295-h"><b></b><span class="v295-cv"></span></div></div>';
+          function pinta(){
+            var o=!!meio[mk];tl.classList.toggle('v303-open',o);
+            sum.querySelector('b').textContent='⋯ '+nStops+(nStops===1?' parada no meio':' paradas no meio')+(o?'':' · toque para ver');
+            sum.querySelector('.v295-cv').textContent=o?'▾':'▸';
+          }
+          sum._p=pinta;pinta();
+          rows[0].insertAdjacentElement('afterend',sum);
+        });
+      });
+    });
+  }
+  document.addEventListener('click',function(e){
+    var s=e.target.closest&&e.target.closest('.v303-sum');
+    if(s){meio[s.dataset.mk]=!meio[s.dataset.mk];s._p();return}
+    var b=e.target.closest&&e.target.closest('.v303-day button');
+    if(b)imprimirDia(b.parentElement.dataset.d);
+  });
+
+  /* ---------- 3. Imprimir o dia: capa + tudo aberto ---------- */
+  function imprimirDia(dia){
+    var P=window.v302;if(!P){T('Falta a v302 atualizada (veja as instruções).','erro');return}
+    var bs=(dadosApp.itinerario||[]).filter(function(b){
+      return b.dataInicio&&b.dataInicio<=dia&&dia<=(b.dataFim||b.dataInicio)&&(b.trechos||[]).some(function(t){return t.origem||t.destino})});
+    if(!bs.length){T('Nada neste dia para imprimir.','info');return}
+    var p=dia.split('-'),nome=new Date(+p[0],+p[1]-1,+p[2]).toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    P.imprimirAberto('Dia '+fm(dia),async function(){
+      var h='<div class="capa"><h1 class="big">'+esc(nome)+'</h1>'+bs.map(function(b){return '<div class="dt">'+esc(b.categoria)+'</div>'}).join('')+'</div>';
+      for(var i=0;i<bs.length;i++)h+=await P.htmlBloco(bs[i],true);
+      return h;
+    });
+  }
+
+  var t=null;
+  function roda(){try{avatares();calendario()}catch(e){console.error('v303',e)}}
+  new MutationObserver(function(){clearTimeout(t);t=setTimeout(roda,150)}).observe(document.body,{childList:true,subtree:true});
+  [700,1800,3500].forEach(function(ms){setTimeout(roda,ms)});
+})();
+</script>
+<!--/V303-->
 </body>
 </html>
