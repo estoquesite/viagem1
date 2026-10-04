@@ -10153,5 +10153,122 @@ body.v287-typing #v299-cal{display:none!important}
 })();
 </script>
 <!--/V299-->
+<!--V300-->
+<!-- CAMADA v300:
+     (1) menu de BAIXO de volta (aparece ao rolar ou ao puxar a barrinha), sem tirar o menu da lateral;
+     (2) ao atualizar a página, tudo abre FECHADINHO (cards do Roteiro, painéis de edição, Hub, Orçamento, Compras).
+     Cole logo ANTES de </body>, depois da v299. Não precisa remover nada. -->
+<style>
+/* ---------- menu de baixo ---------- */
+#v300-tabs{position:fixed;left:50%;bottom:calc(10px + env(safe-area-inset-bottom,0px));width:min(calc(100vw - 110px),420px);transform:translateX(-50%);z-index:90;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:6px;border-radius:28px;background:rgba(30,27,75,.92);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border:1px solid rgba(216,180,254,.45);box-shadow:0 10px 30px rgba(15,23,42,.45),0 0 22px rgba(168,85,247,.35);transition:transform .28s ease,opacity .28s ease}
+#v300-tabs.off{transform:translate(-50%,170%);opacity:0;pointer-events:none}
+#v300-tabs button{border:0;background:transparent;color:#e9d5ff;border-radius:22px;padding:8px 2px;display:flex;flex-direction:column;align-items:center;gap:2px;font-weight:800}
+#v300-tabs button span:first-child{font-size:19px;line-height:1}
+#v300-tabs button span:last-child{font-size:8px;text-transform:uppercase;letter-spacing:.06em}
+#v300-tabs button.on{background:linear-gradient(135deg,#a855f7,#6366f1);color:#fff;box-shadow:0 0 16px rgba(192,132,252,.7)}
+#v300-tabs button:active{transform:scale(.95)}
+#v300-handle{position:fixed;left:50%;bottom:calc(4px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:90px;height:26px;border:0;background:transparent;z-index:89}
+#v300-handle::after{content:"";position:absolute;left:50%;bottom:6px;width:46px;height:5px;margin-left:-23px;border-radius:99px;background:linear-gradient(90deg,#67e8f9,#c084fc,#f0abfc);box-shadow:0 0 10px rgba(192,132,252,.8)}
+body.v287-typing #v300-tabs,body.v287-typing #v300-handle{display:none!important}
+</style>
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i)};
+
+  /* =====================================================
+     1. MENU DE BAIXO
+     ===================================================== */
+  var tm=null,bar=null;
+  function hide(){if(bar)bar.classList.add('off')}
+  function show(ms){if(!bar)return;bar.classList.remove('off');clearTimeout(tm);tm=setTimeout(hide,ms||1600)}
+  function atual(){var t=localStorage.getItem('tab_ativa_v269')||'leitura';return t==='itinerario'?'leitura':t}
+  function marca(){
+    if(!bar)return;var c=atual();
+    [].forEach.call(bar.querySelectorAll('button'),function(b){b.classList.toggle('on',b.dataset.t===c)});
+  }
+  function barra(){
+    if($('v300-tabs'))return;
+    var T=[['leitura','✈️','Roteiro'],['utilidades','📋','Hub'],['orcamento','💰','Orç.'],['compras','🛍️','Compras']];
+    bar=document.createElement('nav');bar.id='v300-tabs';bar.setAttribute('aria-label','Menu de baixo');
+    bar.innerHTML=T.map(function(t){return '<button type="button" data-t="'+t[0]+'" aria-label="'+t[2]+'"><span>'+t[1]+'</span><span>'+t[2]+'</span></button>'}).join('');
+    document.body.appendChild(bar);
+    var h=document.createElement('button');h.id='v300-handle';h.type='button';h.setAttribute('aria-label','Mostrar menu de baixo');
+    h.addEventListener('click',function(){show(4000)});document.body.appendChild(h);
+    bar.addEventListener('click',function(e){
+      var b=e.target.closest('button');if(!b)return;
+      if(typeof mudarTab==='function')mudarTab(b.dataset.t);
+      marca();show(3000);
+    });
+    bar.addEventListener('touchstart',function(){clearTimeout(tm)},{passive:true});
+    addEventListener('scroll',function(){show(1600)},{passive:true});
+    addEventListener('touchmove',function(){show(1600)},{passive:true});
+    var om=window.mudarTab;
+    if(typeof om==='function')window.mudarTab=function(){var r=om.apply(this,arguments);setTimeout(marca,0);return r};
+    marca();show(2800);
+  }
+
+  /* =====================================================
+     2. TUDO FECHADINHO AO ATUALIZAR
+     ===================================================== */
+  var done={lista:false,hub:false,orc:false};
+
+  function fecharLista(){
+    var box=$('v295-lista');if(!box)return false;
+    if(!box.querySelector(':scope > .v295-card'))return false;
+    var g=0,pn,h,mp,b;
+    /* painéis de edição abertos (ponto / trecho) */
+    while(g++<300&&(pn=box.querySelector('.v295-pn[data-ok]'))){
+      h=[].filter.call(box.querySelectorAll('[data-a="op"][data-ok]'),function(x){return x.dataset.ok===pn.dataset.ok})[0];
+      if(!h)break;h.click();
+    }
+    /* painéis de mapa da rota inteira */
+    while(g++<300&&(mp=box.querySelector('.v295-pn:not([data-ok])'))){
+      var sh=mp.closest('.v295-sh');
+      b=sh&&sh.querySelector('[data-a="op"][data-ok^="M|"]');
+      if(!b)break;b.click();
+    }
+    /* cards abertos viram só o cabeçalho */
+    [].forEach.call(box.querySelectorAll(':scope > .v295-card'),function(c){
+      var cv=c.querySelector('.v295-ch .v295-cv'),ch=c.querySelector('.v295-ch');
+      if(cv&&ch&&cv.textContent.trim()==='▾')ch.click();
+    });
+    return true;
+  }
+  function fecharSel(sel){
+    var bs=document.querySelectorAll(sel);if(!bs.length)return false;
+    [].forEach.call(bs,function(b){if(b.textContent.trim()==='▾')b.click()});
+    return true;
+  }
+  function tentar(){
+    if(!done.lista&&fecharLista())done.lista=true;
+    if(!done.hub&&fecharSel('#hub-utilidades-grid .v281-cvb'))done.hub=true;
+    if(!done.orc&&fecharSel('#tab-orcamento .v281-cvb,#tab-compras .v281-cvb'))done.orc=true;
+  }
+
+  /* para a próxima vez já nascer fechado (guarda o estado "tudo fechado") */
+  function resetar(){
+    try{
+      localStorage.setItem('v295_op','{}');
+      var cl={};(dadosApp.itinerario||[]).forEach(function(b){cl[b.id]=1});
+      localStorage.setItem('v295_cl',JSON.stringify(cl));
+      var sh={};['voos','contatos','tarefas','checklist','vouchers','chat'].forEach(function(t){sh['h|card-'+t]=1});
+      localStorage.setItem('v282_s',JSON.stringify({open:{},shut:sh}));
+      localStorage.setItem('v294_ag','0');
+    }catch(e){}
+  }
+  document.addEventListener('visibilitychange',function(){if(document.hidden)resetar()});
+  addEventListener('pagehide',resetar);
+  addEventListener('beforeunload',resetar);
+
+  /* ---------- ligar ---------- */
+  setTimeout(barra,600);setTimeout(barra,2000);
+  var n=0,iv=setInterval(function(){
+    tentar();
+    if((done.lista&&done.hub&&done.orc)||++n>=18)clearInterval(iv);
+  },800);
+  setTimeout(resetar,3000);
+})();
+</script>
+<!--/V300-->
 </body>
 </html>
